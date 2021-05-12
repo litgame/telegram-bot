@@ -1,0 +1,20 @@
+name: litgame_telegram_bot
+description: litgame telegram bot
+version: 2.0.0
+publish_to: 'none' # Remove this line if you wish to publish to pub.dev
+
+environment:
+  sdk: ">=2.12.0-0 <3.0.0"
+
+dependencies:
+  meta: ^1.3.0
+  teledart_app: 0.0.2-dev.1
+  parse_server_sdk: ^2.0.1
+  dartis: ^0.5.0
+  litgame_client:
+    git: git@github.com:litgame/rest-client.git
+
+
+dev_dependencies:
+  test: ^1.16.2
+  pedantic: ^1.11.0
