@@ -113,10 +113,10 @@ class BotAppConfig {
   String? parseRestKey;
   String? gameServerUrl;
 
-  List<String>? arguments;
+  List<String> arguments;
 
   bool _setupFromCliArguments() {
-    if (arguments == null) {
+    if (arguments.isEmpty) {
       return false;
     }
     final parser = ArgParser();
@@ -128,7 +128,7 @@ class BotAppConfig {
     parser.addOption('parseRestKey', abbr: 'r');
     parser.addOption('gameServerUrl', abbr: 's');
     try {
-      final results = parser.parse(arguments!);
+      final results = parser.parse(arguments);
       botKey = results['botKey'];
       dataAppUrl = results['dataAppUrl'];
       dataAppKey = results['dataAppKey'];
