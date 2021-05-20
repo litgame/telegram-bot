@@ -1,0 +1,39 @@
+variables:
+  CONTAINER_BUILT_TAG: "telegram-bot:latest"
+  CONTAINER_NAME: "telegram-bot"
+
+
+stages:
+- build
+- deploy
+
+
+cache:
+  untracked: true
+build:
+  
+  stage: build
+  tags:
+    - docker
+  script:
+    - docker login -u $CI_REGISTRY_USER -p $CI_JOB_TOKEN $CI_REGISTRY
+    - docker build -t $CI_REGISTRY_IMAGE .
+    - docker push $CI_REGISTRY_IMAGE
+
+
+test-deploy:
+  stage: deploy
+  tags:
+    - docker
+  script:
+    - docker pull redis:6.2.3-alpine || true
+    - docker stop redis || true
+    - docker rm redis || true
+    - docker run -d --network litgame --restart always --name redis redis:6.2.3-alpine
+    - docker login -u $CI_REGISTRY_USER -p $CI_JOB_TOKEN $CI_REGISTRY
+    - docker pull $CI_REGISTRY_IMAGE
+    - docker stop $CONTAINER_NAME || true
+    - docker rm $CONTAINER_NAME || true
+    - docker rmi $CONTAINER_BUILT_TAG || true
+    - docker tag $CI_REGISTRY_IMAGE $CONTAINER_BUILT_TAG
+    - docker run -d --restart always --network litgame --name $CONTAINER_NAME $CONTAINER_BUILT_TAG
