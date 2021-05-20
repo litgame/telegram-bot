@@ -12,7 +12,7 @@ dependencies:
   parse_server_sdk: ^2.0.1
   dartis: ^0.5.0
   litgame_client:
-    git: git@github.com:litgame/rest-client.git
+    git: https://github.com/litgame/rest-client.git
 
 
 dev_dependencies:
