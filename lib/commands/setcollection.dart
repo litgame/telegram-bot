@@ -1,5 +1,3 @@
-// ignore_for_file: import_of_legacy_library_into_null_safe
-
 import 'package:args/args.dart';
 import 'package:litgame_telegram_bot/commands/endgame.dart';
 import 'package:litgame_telegram_bot/commands/trainingflow.dart';
@@ -61,6 +59,11 @@ class SetCollectionCmd extends ComplexGameCommand {
   }
 
   void _resumeGameWithError(Message message, TelegramEx telegram) {
+    final id = message.from?.id;
+    if (id == null) {
+      throw 'message.from.id is null!';
+    }
+
     telegram
         .sendMessage(gameChatId,
             'Не нашлось ни одной колоды карт, а без них сыграть не выйдет..')
@@ -68,7 +71,7 @@ class SetCollectionCmd extends ComplexGameCommand {
       final cmd = Command.withArgumentsFrom(() => EndGameCmd(), this);
       if (gameChatId != null) {
         message.chat.id = gameChatId!;
-        message.from.id = game.admin.id;
+        message.from!.id = game.admin.id;
         cmd.run(message, telegram);
       }
     });

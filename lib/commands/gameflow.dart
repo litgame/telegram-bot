@@ -1,4 +1,3 @@
-// ignore_for_file: import_of_legacy_library_into_null_safe
 import 'dart:async';
 
 import 'package:args/args.dart';
@@ -38,8 +37,12 @@ class GameFlowCmd extends ComplexGameCommand
 
   void onGameStart(Message message, TelegramEx telegram) async {
     try {
-      final masterCards = await client.startGameFlow(
-          game.id.toString(), message.from.id.toString());
+      final id = message.from?.id;
+      if (id == null) {
+        throw 'message.from.id is null!';
+      }
+      final masterCards =
+          await client.startGameFlow(game.id.toString(), id.toString());
 
       final toMaster = catchAsyncError(telegram.sendMessage(game.master.id,
           'Ходит ' + game.master.nickname + '(' + game.master.fullName + ')'));
@@ -94,8 +97,12 @@ class GameFlowCmd extends ComplexGameCommand
 
   void onNextTurn(Message message, TelegramEx telegram) async {
     try {
-      final playerStringId = await client.gameFlowNextTurn(
-          game.id.toString(), message.from.id.toString());
+      final id = message.from?.id;
+      if (id == null) {
+        throw 'message.from.id is null!';
+      }
+      final playerStringId =
+          await client.gameFlowNextTurn(game.id.toString(), id.toString());
       final player =
           game.players[int.parse(playerStringId.replaceFirst(APP_PREFIX, ''))];
       if (player == null) {
@@ -155,14 +162,19 @@ class GameFlowCmd extends ComplexGameCommand
     try {
       var sType = action.replaceAll('select-', '');
       var type = CardType.generic.getTypeByName(sType);
+
+      final id = message.from?.id;
+      if (id == null) {
+        throw 'message.from.id is null!';
+      }
       final card = await client.gameFlowSelectCard(
-          game.id.toString(), message.from.id.toString(), type);
+          game.id.toString(), id.toString(), type);
       deleteScheduledMessages(telegram);
-      sendImage(message.from.id, card.imgUrl, card.name, false).then((value) {
-        sendEndTurn(message.from.id);
+      sendImage(id, card.imgUrl, card.name, false).then((value) {
+        sendEndTurn(id);
       });
       copyChat((chatId, _) {
-        if (message.from.id == chatId) return;
+        if (id == chatId) return;
         sendImage(chatId, card.imgUrl, card.name, false);
       });
     } on ValidationException catch (error) {

@@ -1,5 +1,3 @@
-// ignore_for_file: import_of_legacy_library_into_null_safe
-
 import 'package:litgame_telegram_bot/models/user.dart';
 import 'package:teledart/model.dart';
 import 'package:teledart_app/teledart_app.dart';
@@ -155,7 +153,11 @@ class HelpCmd extends ComplexCommand with Middleware {
   @override
   void handle(Update data, TelegramEx telegram) {
     if (data.message?.chat.type == 'private') {
-      final user = LitUser(data.message!.from);
+      final from = data.message?.from;
+      if (from == null) {
+        return;
+      }
+      final user = LitUser(from);
       user.registrationChecked.then((registered) {
         if (!registered) {
           user.save();

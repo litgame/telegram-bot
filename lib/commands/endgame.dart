@@ -1,5 +1,3 @@
-// ignore_for_file: import_of_legacy_library_into_null_safe
-
 import 'package:args/args.dart';
 import 'package:litgame_client/client.dart';
 import 'package:litgame_telegram_bot/models/game.dart';
@@ -22,8 +20,12 @@ class EndGameCmd extends GameCommand {
     checkGameChat(message);
 
     try {
-      final success = await client.endGame(
-          message.chat.id.toString(), message.from.id.toString());
+      final id = message.from?.id;
+      if (id == null) {
+        throw 'message.from.id is null!';
+      }
+      final success =
+          await client.endGame(message.chat.id.toString(), id.toString());
       if (!success) {
         reportError(message.chat.id,
             'Не получилось остановить игру... непонятно, почему.');

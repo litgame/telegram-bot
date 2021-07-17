@@ -1,6 +1,5 @@
 import 'dart:io';
 
-// ignore_for_file: import_of_legacy_library_into_null_safe
 import 'package:args/args.dart';
 import 'package:litgame_client/client.dart';
 import 'package:parse_server_sdk/parse_server_sdk.dart';

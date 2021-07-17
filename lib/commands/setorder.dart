@@ -1,5 +1,3 @@
-// ignore_for_file: import_of_legacy_library_into_null_safe
-
 import 'package:args/args.dart';
 import 'package:litgame_telegram_bot/models/game.dart';
 import 'package:litgame_telegram_bot/models/user.dart';
@@ -36,8 +34,12 @@ class SetOrderCmd extends GameCommand {
 
   @override
   void runChecked(Message message, TelegramEx telegram) async {
-    if (message.from.id != game.admin.id) {
-      reportError(message.from.id, 'Это можно только админу игры');
+    final id = message.from?.id;
+    if (id == null) {
+      throw 'message.from.id is null!';
+    }
+    if (id != game.admin.id) {
+      reportError(id, 'Это можно только админу игры');
       return;
     }
     deleteScheduledMessages(telegram);
@@ -52,7 +54,7 @@ class SetOrderCmd extends GameCommand {
 
     if (arguments?['reset'] != null) {
       try {
-        await client.sortReset(game.id.toString(), message.from.id.toString());
+        await client.sortReset(game.id.toString(), id.toString());
         sorted.clear();
         await client.sortPlayer(game.id.toString(), game.master.id.toString(),
             game.master.id.toString(), 0);
@@ -69,7 +71,7 @@ class SetOrderCmd extends GameCommand {
           scheduleMessageDelete(msg.chat.id, msg.message_id);
         });
       } catch (error) {
-        reportError(message.from.id, error.toString());
+        reportError(id, error.toString());
       }
       return;
     }
@@ -80,15 +82,15 @@ class SetOrderCmd extends GameCommand {
       final user = game.players[uid];
       if (user != null) {
         try {
-          final position = await client.sortPlayer(game.id.toString(),
-              message.from.id.toString(), user.id.toString(), 99);
+          final position = await client.sortPlayer(
+              game.id.toString(), id.toString(), user.id.toString(), 99);
           sorted.add(user);
           if (position != sorted.length - 1) {
-            reportError(message.from.id,
+            reportError(id,
                 'Игрок отсортирован, но оказался на позиции $position вместо ${sorted.length - 1}');
           }
         } catch (error) {
-          reportError(message.from.id, error.toString());
+          reportError(id, error.toString());
           return;
         }
       }

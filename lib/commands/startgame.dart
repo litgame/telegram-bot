@@ -1,5 +1,3 @@
-// ignore_for_file: import_of_legacy_library_into_null_safe
-
 import 'package:args/args.dart';
 import 'package:litgame_client/client.dart';
 import 'package:litgame_telegram_bot/models/game.dart';
@@ -20,10 +18,13 @@ class StartGameCmd extends GameCommand {
 
   @override
   void run(Message message, TelegramEx telegram) async {
+    final id = message.from?.id;
+    if (id == null) {
+      throw 'message.from.id is null!';
+    }
     checkGameChat(message);
     try {
-      await client.startGame(
-          message.chat.id.toString(), message.from.id.toString());
+      await client.startGame(message.chat.id.toString(), id.toString());
     } on ValidationException catch (error) {
       if (error.type == ErrorType.exists) {
         _resumeOldGame(message, telegram);
@@ -32,7 +33,7 @@ class StartGameCmd extends GameCommand {
       }
     }
     final game = LitGame.startNew(message.chat.id);
-    game.players[message.from.id] = LitUser(message.from, isAdmin: true);
+    game.players[id] = LitUser(message.from!, isAdmin: true);
     gameStartMessage(telegram, game);
   }
 

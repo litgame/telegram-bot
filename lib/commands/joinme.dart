@@ -1,5 +1,3 @@
-// ignore_for_file: import_of_legacy_library_into_null_safe
-
 import 'package:args/args.dart';
 import 'package:litgame_client/client.dart';
 import 'package:litgame_telegram_bot/models/game.dart';
@@ -24,15 +22,19 @@ class JoinMeCmd extends GameCommand {
   void runChecked(Message message, TelegramEx telegram) async {
     var success = false;
     var registered = true;
+    final id = message.from?.id;
+    if (id == null) {
+      throw 'message.from.id is null!';
+    }
     await telegram
         .sendMessage(
-            message.from.id,
+            id,
             'Добро пожаловать в игру! Я буду писать тебе в личку,'
             ' что происходит в общем чате, чтобы тебе туда-сюда не прыгать. '
             'Кроме того, я буду форвардить всё, что ты мне напишешь в общий чат.')
         .onError((error, stackTrace) {
       registered = false;
-      final failedUser = LitUser(message.from);
+      final failedUser = LitUser(message.from!);
       return telegram.sendMessage(
           game.id,
           failedUser.nickname +
@@ -42,8 +44,7 @@ class JoinMeCmd extends GameCommand {
     if (!registered) return;
 
     try {
-      success =
-          await client.join(game.id.toString(), message.from.id.toString());
+      success = await client.join(game.id.toString(), id.toString());
     } on ValidationException catch (error) {
       switch (error.type) {
         case ErrorType.exists:
@@ -57,7 +58,7 @@ class JoinMeCmd extends GameCommand {
       }
     }
 
-    final user = LitUser(message.from);
+    final user = LitUser(message.from!);
     if (!success) {
       reportError(game.id, 'Не удалось добавить ${user.nickname} в игру');
       return;

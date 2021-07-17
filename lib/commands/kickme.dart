@@ -1,5 +1,3 @@
-// ignore_for_file: import_of_legacy_library_into_null_safe
-
 import 'package:args/args.dart';
 import 'package:litgame_client/client.dart';
 import 'package:litgame_telegram_bot/models/game.dart';
@@ -23,9 +21,14 @@ class KickMeCmd extends JoinMeCmd {
 
   @override
   void runChecked(Message message, TelegramEx telegram) async {
+    final id = message.from?.id;
+    if (id == null) {
+      throw 'message.from.id is null!';
+    }
+
     try {
-      final result = await client.kick(game.id.toString(),
-          message.from.id.toString(), message.from.id.toString());
+      final result =
+          await client.kick(game.id.toString(), id.toString(), id.toString());
       if (result.success) {
         if (result.gameStopped) {
           game.stop();
@@ -35,7 +38,7 @@ class KickMeCmd extends JoinMeCmd {
           return;
         }
 
-        game.players.remove(message.from.id);
+        game.players.remove(id);
         if (game.state == LitGameState.join) {
           sendStatisticsToAdmin(game, telegram, message.chat.id);
         }
@@ -66,7 +69,7 @@ class KickMeCmd extends JoinMeCmd {
       }
     } on ValidationException catch (error) {
       if (error.type == ErrorType.notFound) {
-        reportError(message.from.id, 'Вы уже не играете в игру, всё норм');
+        reportError(id, 'Вы уже не играете в игру, всё норм');
         return;
       } else
         rethrow;

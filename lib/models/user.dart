@@ -1,4 +1,3 @@
-// ignore_for_file: import_of_legacy_library_into_null_safe
 import 'dart:async';
 import 'dart:collection';
 
@@ -12,13 +11,13 @@ class LitUser extends ParseObject implements ParseCloneable {
   static final Map<int, Map<String, dynamic>> _usersDataCache = {};
 
   LitUser.clone()
-      : telegramUser = User(id: -1),
+      : telegramUser = User(id: -1, is_bot: false, first_name: 'null'),
         id = -1,
         super(PARSE_CLASSNAME);
 
   LitUser.byId(int userId)
       : id = userId,
-        telegramUser = User(id: userId),
+        telegramUser = User(id: userId, is_bot: false, first_name: 'null'),
         super(PARSE_CLASSNAME) {
     telegramUser.id = userId;
     registrationChecked = _findInStorage();
@@ -44,10 +43,10 @@ class LitUser extends ParseObject implements ParseCloneable {
   int id;
 
   String get nickname =>
-      '@' + (telegramUser.username ?? (telegramUser.first_name ?? 'unknown'));
+      '@' + (telegramUser.username ?? (telegramUser.first_name));
 
   String get fullName =>
-      (telegramUser.first_name ?? '') + ' ' + (telegramUser.last_name ?? '');
+      (telegramUser.first_name) + ' ' + (telegramUser.last_name ?? '');
 
   bool get noId => id < 0;
 

@@ -1,5 +1,3 @@
-// ignore_for_file: import_of_legacy_library_into_null_safe
-
 import 'package:args/args.dart';
 import 'package:litgame_telegram_bot/models/game.dart';
 import 'package:teledart/model.dart';
@@ -22,17 +20,22 @@ class SetMasterCmd extends GameCommand {
 
   @override
   void runChecked(Message message, TelegramEx telegram) async {
+    final id = message.from?.id;
+    if (id == null) {
+      throw 'message.from.id is null!';
+    }
+
     deleteScheduledMessages(telegram);
     final player = game.players[int.parse(arguments?['userId'])];
     if (player == null) {
-      reportError(message.from.id, 'Player not found!');
+      reportError(id, 'Player not found!');
       return;
     }
     try {
       final success = await client.setMaster(
-          game.id.toString(), message.from.id.toString(), player.id.toString());
+          game.id.toString(), id.toString(), player.id.toString());
       if (!success) {
-        reportError(message.from.id, 'Can\'t set master');
+        reportError(id, 'Can\'t set master');
         return;
       }
       player.isGameMaster = true;
@@ -48,7 +51,7 @@ class SetMasterCmd extends GameCommand {
       });
       cmd.run(message, telegram);
     } catch (error) {
-      reportError(message.from.id, error.toString());
+      reportError(id, error.toString());
       return;
     }
   }

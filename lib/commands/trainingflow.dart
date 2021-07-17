@@ -1,5 +1,3 @@
-// ignore_for_file: import_of_legacy_library_into_null_safe
-
 import 'package:args/args.dart';
 import 'package:litgame_client/client.dart';
 import 'package:litgame_telegram_bot/models/game.dart';
@@ -41,13 +39,16 @@ class TrainingFlowCmd extends ComplexGameCommand
   }
 
   void onTrainingStart(Message message, TelegramEx telegram) async {
+    final id = message.from?.id;
+    if (id == null) {
+      throw 'message.from.id is null!';
+    }
     try {
-      await client.startTrainingFlow(
-          game.id.toString(), message.from.id.toString(),
+      await client.startTrainingFlow(game.id.toString(), id.toString(),
           collectionId: arguments?['cid']);
     } on ValidationException catch (error) {
       if (error.type == ErrorType.access) {
-        reportError(message.from.id, error.message);
+        reportError(id, error.message);
         return;
       } else {
         rethrow;
@@ -85,9 +86,13 @@ class TrainingFlowCmd extends ComplexGameCommand
   }
 
   void onNextTurn(Message message, TelegramEx telegram) async {
+    final id = message.from?.id;
+    if (id == null) {
+      throw 'message.from.id is null!';
+    }
     try {
-      final playerCard = await client.trainingFlowNextTurn(
-          game.id.toString(), message.from.id.toString());
+      final playerCard =
+          await client.trainingFlowNextTurn(game.id.toString(), id.toString());
       final playerId =
           int.parse(playerCard.keys.first.replaceFirst(APP_PREFIX, ''));
       final player = game.players[playerId];
