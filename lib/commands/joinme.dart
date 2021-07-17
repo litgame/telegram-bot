@@ -1,4 +1,5 @@
 // ignore_for_file: import_of_legacy_library_into_null_safe
+
 import 'package:args/args.dart';
 import 'package:litgame_client/client.dart';
 import 'package:litgame_telegram_bot/models/game.dart';
@@ -22,6 +23,24 @@ class JoinMeCmd extends GameCommand {
   @override
   void runChecked(Message message, TelegramEx telegram) async {
     var success = false;
+    var registered = true;
+    await telegram
+        .sendMessage(
+            message.from.id,
+            'Добро пожаловать в игру! Я буду писать тебе в личку,'
+            ' что происходит в общем чате, чтобы тебе туда-сюда не прыгать. '
+            'Кроме того, я буду форвардить всё, что ты мне напишешь в общий чат.')
+        .onError((error, stackTrace) {
+      registered = false;
+      final failedUser = LitUser(message.from);
+      return telegram.sendMessage(
+          game.id,
+          failedUser.nickname +
+              ' не смог подключиться, потому что не написал мне в личку, а надо =\\ Пусть напишет сначала мне в личку, а потом попробует ещё раз!');
+    });
+
+    if (!registered) return;
+
     try {
       success =
           await client.join(game.id.toString(), message.from.id.toString());
