@@ -8,8 +8,7 @@ environment:
 
 dependencies:
   meta: ^1.7.0
-  teledart_app: #1.0.0-dev1
-    path: ../../teledart_app
+  teledart_app: 1.0.0-dev1
   parse_server_sdk: ^3.1.0
 #  dartis: ^0.5.0
 #  redis: ^2.0.0
