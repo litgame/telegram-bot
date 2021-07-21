@@ -173,6 +173,7 @@ class GameFlowCmd extends ComplexGameCommand
       sendImage(id, card.imgUrl, card.name, false).then((value) {
         sendEndTurn(id);
       });
+      sendImage(game.id, card.imgUrl, card.name, false);
       copyChat((chatId, _) {
         if (id == chatId) return;
         sendImage(chatId, card.imgUrl, card.name, false);
