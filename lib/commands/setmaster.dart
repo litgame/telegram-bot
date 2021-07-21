@@ -44,11 +44,14 @@ class SetMasterCmd extends GameCommand {
 
       game.state = LitGameState.sorting;
 
-      final cmd = Command.withArguments(() => SetOrderCmd(), {
-        'gci': gameChatId.toString(),
-        'userId': arguments?['userId'],
-        'reset': ''
-      });
+      final cmd = Command.withArguments(
+          () => SetOrderCmd(),
+          {
+            'gci': gameChatId.toString(),
+            'userId': arguments?['userId'],
+            'reset': ''
+          },
+          asyncErrorHandler);
       cmd.run(message, telegram);
     } catch (error) {
       reportError(id, error.toString());

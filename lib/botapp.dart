@@ -50,25 +50,34 @@ class BotApp extends TeledartApp {
 
   @override
   List<MiddlewareConstructor> middleware = [
-    () => ComplexCommand.withAction(() => HelpCmd(), 'firstRun') as Middleware,
+    () => ComplexCommand.withAction(
+            () => HelpCmd(), 'firstRun', (exception, _, __) => print(exception))
+        as Middleware,
     () => Logger(),
     // () => MessageCopy()
   ];
 
   @override
-  void onError(Object exception, Update data, TelegramEx telegram) {
-    var chatId = data.message?.chat.id ?? data.callback_query?.message?.chat.id;
-    if (exception is FatalException || exception is ValidationException) {
-      telegram
-          .sendMessage(chatId, 'Rest server error: ' + exception.toString())
-          .catchError((error) {
-        print(error.toString());
-      });
-    } else {
-      telegram.sendMessage(chatId, exception.toString()).catchError((error) {
-        print(error.toString());
-      });
+  void onError(Object exception, dynamic trace, dynamic data) {
+    print('=== EXCEPTION! ===');
+    print(exception);
+    if (data is Update) {
+      var chatId =
+          data.message?.chat.id ?? data.callback_query?.message?.chat.id;
+      if (exception is FatalException || exception is ValidationException) {
+        telegram
+            .sendMessage(chatId, 'Rest server error: ' + exception.toString())
+            .catchError((error) {
+          print(error.toString());
+        });
+      } else {
+        telegram.sendMessage(chatId, exception.toString()).catchError((error) {
+          print(error.toString());
+        });
+      }
     }
+    print(trace);
+    print('==================');
   }
 
   @override

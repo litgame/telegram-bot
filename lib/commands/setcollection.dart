@@ -15,8 +15,9 @@ class SetCollectionCmd extends ComplexGameCommand {
       {'list': onCollectionList, 'select': onCollectionSelect};
 
   @override
-  ArgParser getParser() =>
-      super.getParser()..addOption('gci')..addOption('cid');
+  ArgParser getParser() => super.getParser()
+    ..addOption('gci')
+    ..addOption('cid');
 
   @override
   bool get system => true;
@@ -80,7 +81,7 @@ class SetCollectionCmd extends ComplexGameCommand {
   void _startGameWithCollection(String id) {
     game.state = LitGameState.training;
     final cmd = ComplexCommand.withAction(() => TrainingFlowCmd(), 'start',
-        {'gci': arguments?['gci'], 'cid': id});
+        asyncErrorHandler, {'gci': arguments?['gci'], 'cid': id});
     cmd.run(message, telegram);
   }
 

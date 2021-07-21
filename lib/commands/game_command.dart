@@ -56,17 +56,6 @@ mixin GameCmdMix on Command {
     }
   }
 
-  Future catchAsyncError(Future future) {
-    return future.catchError((error, _) {
-      final chatId = gameChatId;
-      if (chatId == null) {
-        print(error.toString());
-      } else {
-        reportError(chatId, error.toString());
-      }
-    });
-  }
-
   void runChecked(Message message, TelegramEx telegram);
 }
 

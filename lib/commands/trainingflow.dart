@@ -16,8 +16,9 @@ class TrainingFlowCmd extends ComplexGameCommand
   bool get system => true;
 
   @override
-  ArgParser getParser() =>
-      super.getParser()..addOption('gci')..addOption('cid');
+  ArgParser getParser() => super.getParser()
+    ..addOption('gci')
+    ..addOption('cid');
 
   @override
   List<LitGameState> get worksAtStates => [LitGameState.training];
@@ -145,8 +146,8 @@ class TrainingFlowCmd extends ComplexGameCommand
     });
 
     game.state = LitGameState.game;
-    final cmd = ComplexCommand.withAction(
-        () => GameFlowCmd(), 'start', {'gci': game.id.toString()});
+    final cmd = ComplexCommand.withAction(() => GameFlowCmd(), 'start',
+        asyncErrorHandler, {'gci': game.id.toString()});
     endMessageSent.then((value) {
       cmd.run(message, telegram);
     });

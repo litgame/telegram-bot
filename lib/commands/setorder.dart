@@ -46,8 +46,8 @@ class SetOrderCmd extends GameCommand {
 
     if (arguments?['finish'] != null) {
       game.state = LitGameState.selectCollection;
-      final cmd = ComplexCommand.withAction(
-          () => SetCollectionCmd(), 'list', {'gci': gameChatId.toString()});
+      final cmd = ComplexCommand.withAction(() => SetCollectionCmd(), 'list',
+          asyncErrorHandler, {'gci': gameChatId.toString()});
       cmd.run(message, telegram);
       return;
     }
