@@ -33,7 +33,7 @@ class MessageCopy with Middleware {
     final gameId = await client.findGameOfPlayer(message.chat.id.toString());
     if (gameId.isEmpty) return;
 
-    final telegramGameId = int.tryParse(gameId.replaceFirst('telegram-', ''));
+    final telegramGameId = int.tryParse(gameId.replaceFirst(APP_PREFIX, ''));
     if (telegramGameId == null) return;
 
     final game = LitGame.find(telegramGameId);
