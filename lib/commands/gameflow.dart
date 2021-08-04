@@ -33,6 +33,7 @@ class GameFlowCmd extends ComplexGameCommand
         'select-place': onSelectCard,
         'select-person': onSelectCard,
         'next-turn': onNextTurn,
+        'skip': onSkip,
       };
 
   void onGameStart(Message message, TelegramEx telegram) async {
@@ -103,44 +104,7 @@ class GameFlowCmd extends ComplexGameCommand
       }
       final playerStringId =
           await client.gameFlowNextTurn(game.id.toString(), id.toString());
-      final player =
-          game.players[int.parse(playerStringId.replaceFirst(APP_PREFIX, ''))];
-      if (player == null) {
-        throw ValidationException('Пользователя нет в списке игроков!',
-            ErrorType.notFound.toString());
-      }
-      deleteScheduledMessages(telegram);
-      final toPlayer = catchAsyncError(telegram.sendMessage(
-          player.id, 'Ходит ' + player.nickname + '(' + player.fullName + ')'));
-      final toChat = catchAsyncError(telegram.sendMessage(
-          game.id, 'Ходит ' + player.nickname + '(' + player.fullName + ')'));
-
-      copyChat((chatId, _) {
-        if (player.id == chatId) return;
-        catchAsyncError(telegram.sendMessage(
-            chatId, 'Ходит ' + player.nickname + '(' + player.fullName + ')'));
-      });
-
-      await Future.wait([toPlayer, toChat]);
-
-      telegram
-          .sendMessage(player.id, 'Тянем карту!',
-              reply_markup: InlineKeyboardMarkup(inline_keyboard: [
-                [
-                  InlineKeyboardButton(
-                      text: 'Общая',
-                      callback_data: buildAction('select-generic')),
-                  InlineKeyboardButton(
-                      text: 'Место',
-                      callback_data: buildAction('select-place')),
-                  InlineKeyboardButton(
-                      text: 'Персонаж',
-                      callback_data: buildAction('select-person')),
-                ]
-              ]))
-          .then((msg) {
-        scheduleMessageDelete(msg.chat.id, msg.message_id);
-      });
+      _onNextPlayer(playerStringId);
     } on ValidationException catch (error) {
       switch (error.type) {
         case ErrorType.validation:
@@ -156,6 +120,71 @@ class GameFlowCmd extends ComplexGameCommand
           rethrow;
       }
     }
+  }
+
+  void onSkip(Message message, TelegramEx telegram) async {
+    final id = message.from?.id;
+    if (id == null) {
+      throw 'message.from.id is null!';
+    }
+    try {
+      final playerStringId =
+          await client.gameFlowSkipTurn(game.id.toString(), id.toString());
+      _onNextPlayer(playerStringId);
+    } on ValidationException catch (error) {
+      if (error.type == ErrorType.state) {
+        reportError(game.id, error.message);
+        return;
+      } else if (error.type == ErrorType.validation) {
+        reportError(game.id, error.message);
+        return;
+      } else if (error.type == ErrorType.notFound) {
+        reportError(game.id, error.message);
+        return;
+      } else {
+        rethrow;
+      }
+    }
+  }
+
+  void _onNextPlayer(String playerStringId) async {
+    final player =
+        game.players[int.parse(playerStringId.replaceFirst(APP_PREFIX, ''))];
+    if (player == null) {
+      throw ValidationException(
+          'Пользователя нет в списке игроков!', ErrorType.notFound.toString());
+    }
+    deleteScheduledMessages(telegram);
+    final toPlayer = catchAsyncError(telegram.sendMessage(
+        player.id, 'Ходит ' + player.nickname + '(' + player.fullName + ')'));
+    final toChat = catchAsyncError(telegram.sendMessage(
+        game.id, 'Ходит ' + player.nickname + '(' + player.fullName + ')'));
+
+    copyChat((chatId, _) {
+      if (player.id == chatId) return;
+      catchAsyncError(telegram.sendMessage(
+          chatId, 'Ходит ' + player.nickname + '(' + player.fullName + ')'));
+    });
+
+    await Future.wait([toPlayer, toChat]);
+
+    telegram
+        .sendMessage(player.id, 'Тянем карту!',
+            reply_markup: InlineKeyboardMarkup(inline_keyboard: [
+              [
+                InlineKeyboardButton(
+                    text: 'Общая',
+                    callback_data: buildAction('select-generic')),
+                InlineKeyboardButton(
+                    text: 'Место', callback_data: buildAction('select-place')),
+                InlineKeyboardButton(
+                    text: 'Персонаж',
+                    callback_data: buildAction('select-person')),
+              ]
+            ]))
+        .then((msg) {
+      scheduleMessageDelete(msg.chat.id, msg.message_id);
+    });
   }
 
   void onSelectCard(Message message, TelegramEx telegram) async {

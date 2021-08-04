@@ -1,5 +1,6 @@
 import 'package:args/args.dart';
 import 'package:litgame_client/client.dart';
+import 'package:litgame_client/models/card.dart';
 import 'package:litgame_telegram_bot/models/game.dart';
 import 'package:teledart/model.dart';
 import 'package:teledart_app/teledart_app.dart';
@@ -27,6 +28,7 @@ class TrainingFlowCmd extends ComplexGameCommand
   Map<String, CmdAction> get actionMap => {
         'start': onTrainingStart,
         'next-turn': onNextTurn,
+        'skip': onSkip,
         'end': onTrainingEnd,
       };
 
@@ -94,32 +96,7 @@ class TrainingFlowCmd extends ComplexGameCommand
     try {
       final playerCard =
           await client.trainingFlowNextTurn(game.id.toString(), id.toString());
-      final playerId =
-          int.parse(playerCard.keys.first.replaceFirst(APP_PREFIX, ''));
-      final player = game.players[playerId];
-      if (player == null) {
-        throw ValidationException('Пользователя нет в списке игроков!',
-            ErrorType.notFound.toString());
-      }
-
-      final card = playerCard.values.first;
-      final cardMsg = card.name +
-          '\r\n' +
-          'Ходит ' +
-          player.nickname +
-          '(' +
-          player.fullName +
-          ')';
-
-      sendImage(game.id, card.imgUrl, cardMsg, false);
-      copyChat((chatId, _) {
-        if (player.id == chatId) return;
-        sendImage(chatId, card.imgUrl, cardMsg, false);
-      });
-
-      sendImage(player.id, card.imgUrl, card.name, false).then((value) {
-        sendEndTurn(player.id);
-      });
+      _onNextPlayer(playerCard);
     } on ValidationException catch (error) {
       if (error.type == ErrorType.state) {
         reportError(game.id, error.message);
@@ -134,6 +111,60 @@ class TrainingFlowCmd extends ComplexGameCommand
         rethrow;
       }
     }
+  }
+
+  void onSkip(Message message, TelegramEx telegram) async {
+    final id = message.from?.id;
+    if (id == null) {
+      throw 'message.from.id is null!';
+    }
+    try {
+      final playerCard =
+          await client.trainingFlowSkipTurn(game.id.toString(), id.toString());
+      _onNextPlayer(playerCard);
+    } on ValidationException catch (error) {
+      if (error.type == ErrorType.state) {
+        reportError(game.id, error.message);
+        return;
+      } else if (error.type == ErrorType.validation) {
+        reportError(game.id, error.message);
+        return;
+      } else if (error.type == ErrorType.notFound) {
+        reportError(game.id, error.message);
+        return;
+      } else {
+        rethrow;
+      }
+    }
+  }
+
+  void _onNextPlayer(Map<String, Card> playerCard) {
+    final playerId =
+        int.parse(playerCard.keys.first.replaceFirst(APP_PREFIX, ''));
+    final player = game.players[playerId];
+    if (player == null) {
+      throw ValidationException(
+          'Пользователя нет в списке игроков!', ErrorType.notFound.toString());
+    }
+
+    final card = playerCard.values.first;
+    final cardMsg = card.name +
+        '\r\n' +
+        'Ходит ' +
+        player.nickname +
+        '(' +
+        player.fullName +
+        ')';
+
+    sendImage(game.id, card.imgUrl, cardMsg, false);
+    copyChat((chatId, _) {
+      if (player.id == chatId) return;
+      sendImage(chatId, card.imgUrl, cardMsg, false);
+    });
+
+    sendImage(player.id, card.imgUrl, card.name, false).then((value) {
+      sendEndTurn(player.id);
+    });
   }
 
   void onTrainingEnd(Message message, TelegramEx telegram) async {

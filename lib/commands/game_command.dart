@@ -101,17 +101,17 @@ abstract class ComplexGameCommand extends ComplexCommand
     with GameCmdMix, LitGameClient
     implements GameCmdMix {
   @override
-  void run(Message message, TelegramEx telegram) {
+  void run(Message message, TelegramEx telegram, {bool stateCheck: true}) {
     try {
       if (gameChatId == null) {
         arguments = getGameBaseParser()
             .parse(['cmd', '--gci', message.chat.id.toString()]);
       }
-      if (!checkState()) {
+      if (stateCheck && !checkState()) {
         reportError(message.chat.id, 'Invalid state ${game.state.toString()}');
-      } else {
-        super.run(message, telegram);
+        return;
       }
+      super.run(message, telegram);
     } catch (error) {
       reportError(message.chat.id, error.toString());
     }
