@@ -3,7 +3,7 @@ FROM dart:stable AS build
 # Resolve app dependencies.
 WORKDIR /app
 COPY pubspec.* ./
-RUN dart pub get
+RUN dart pub upgrade
 
 # Copy app source code and AOT compile it.
 COPY . .
