@@ -6,7 +6,7 @@ import 'package:teledart/model.dart';
 import 'package:teledart_app/teledart_app.dart';
 
 import '../botapp.dart';
-import 'game_command.dart';
+import 'core/game_command.dart';
 import 'gameflow.dart';
 
 class TrainingFlowCmd extends ComplexGameCommand with ImageSender, EndTurn {

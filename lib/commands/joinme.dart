@@ -6,8 +6,8 @@ import 'package:meta/meta.dart';
 import 'package:teledart/model.dart';
 import 'package:teledart_app/teledart_app.dart';
 
+import 'core/game_command.dart';
 import 'finishjoin.dart';
-import 'game_command.dart';
 
 class JoinMeCmd extends GameCommand {
   JoinMeCmd();

@@ -5,7 +5,7 @@ import 'package:litgame_telegram_bot/models/user.dart';
 import 'package:teledart/model.dart';
 import 'package:teledart_app/teledart_app.dart';
 
-import 'game_command.dart';
+import 'core/game_command.dart';
 
 class StartGameCmd extends GameCommand {
   StartGameCmd();
