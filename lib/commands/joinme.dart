@@ -19,7 +19,7 @@ class JoinMeCmd extends GameCommand {
   String get name => 'joinme';
 
   @override
-  void runChecked(Message message, TelegramEx telegram) async {
+  void runCheckedState(Message message, TelegramEx telegram) async {
     var success = false;
     var registered = true;
     final id = message.from?.id;

@@ -38,7 +38,7 @@ class StartGameCmd extends GameCommand {
   }
 
   void gameStartMessage(TelegramEx telegram, LitGame game) {
-    telegram
+    catchAsyncError(telegram
         .sendMessage(
             game.id,
             '=========================================\r\n'
@@ -55,7 +55,7 @@ class StartGameCmd extends GameCommand {
             ]))
         .then((msg) {
       scheduleMessageDelete(msg.chat.id, msg.message_id);
-    });
+    }));
   }
 
   void _resumeOldGame(Message message, TelegramEx telegram) async {
@@ -73,5 +73,5 @@ class StartGameCmd extends GameCommand {
   List<LitGameState> get worksAtStates => [];
 
   @override
-  void runChecked(Message message, TelegramEx telegram) {}
+  void runCheckedState(Message message, TelegramEx telegram) {}
 }

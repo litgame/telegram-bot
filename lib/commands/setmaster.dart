@@ -19,7 +19,7 @@ class SetMasterCmd extends GameCommand {
   String get name => 'setmaster';
 
   @override
-  void runChecked(Message message, TelegramEx telegram) async {
+  void runCheckedState(Message message, TelegramEx telegram) async {
     final id = message.from?.id;
     if (id == null) {
       throw 'message.from.id is null!';

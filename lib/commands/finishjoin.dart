@@ -17,7 +17,7 @@ class FinishJoinCmd extends GameCommand {
   String get name => 'finishjoin';
 
   @override
-  void runChecked(Message message, TelegramEx telegram) async {
+  void runCheckedState(Message message, TelegramEx telegram) async {
     if (message.chat.id != game.admin.id) {
       catchAsyncError(
           telegram.sendMessage(message.chat.id, 'Не ты админ текущей игры!'));

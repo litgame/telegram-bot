@@ -52,7 +52,7 @@ class EndGameCmd extends GameCommand {
   List<LitGameState> get worksAtStates => [];
 
   @override
-  void runChecked(Message message, TelegramEx telegram) {}
+  void runCheckedState(Message message, TelegramEx telegram) {}
 }
 
 class StopGameCmd extends EndGameCmd {

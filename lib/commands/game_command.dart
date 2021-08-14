@@ -56,7 +56,7 @@ mixin GameCmdMix on Command {
     }
   }
 
-  void runChecked(Message message, TelegramEx telegram);
+  void runCheckedState(Message message, TelegramEx telegram);
 }
 
 mixin LitGameClient on Command {
@@ -89,7 +89,7 @@ abstract class GameCommand extends Command
       if (!checkState()) {
         reportError(message.chat.id, 'Invalid state ${game.state.toString()}');
       } else {
-        runChecked(message, telegram);
+        runCheckedState(message, telegram);
       }
     } catch (error) {
       reportError(message.chat.id, error.toString());
@@ -118,7 +118,7 @@ abstract class ComplexGameCommand extends ComplexCommand
   }
 
   @override
-  void runChecked(Message message, TelegramEx telegram) {}
+  void runCheckedState(Message message, TelegramEx telegram) {}
 
   @override
   String buildAction(String actionName, [Map<String, String>? parameters]) {

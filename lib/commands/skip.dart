@@ -75,6 +75,6 @@ class SkipCmd extends GameCommand {
       [LitGameState.game, LitGameState.training];
 
   @override
-  void runChecked(Message message, TelegramEx telegram) =>
+  void runCheckedState(Message message, TelegramEx telegram) =>
       _runSkipTurnCommand(game);
 }
