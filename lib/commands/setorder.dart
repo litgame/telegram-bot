@@ -34,12 +34,8 @@ class SetOrderCmd extends GameCommand {
 
   @override
   void runCheckedState(Message message, TelegramEx telegram) async {
-    final id = message.from?.id;
-    if (id == null) {
-      throw 'message.from.id is null!';
-    }
-    if (id != game.admin.id) {
-      reportError(id, 'Это можно только админу игры');
+    if (triggeredById != game.admin.id) {
+      reportError(triggeredById, 'Это можно только админу игры');
       return;
     }
     deleteScheduledMessages(telegram);
@@ -54,7 +50,7 @@ class SetOrderCmd extends GameCommand {
 
     if (arguments?['reset'] != null) {
       try {
-        await client.sortReset(game.id.toString(), id.toString());
+        await client.sortReset(game.id.toString(), triggeredById.toString());
         sorted.clear();
         await client.sortPlayer(game.id.toString(), game.master.id.toString(),
             game.master.id.toString(), 0);
@@ -71,7 +67,7 @@ class SetOrderCmd extends GameCommand {
           scheduleMessageDelete(msg.chat.id, msg.message_id);
         });
       } catch (error) {
-        reportError(id, error.toString());
+        reportError(triggeredById, error.toString());
       }
       return;
     }
@@ -82,15 +78,15 @@ class SetOrderCmd extends GameCommand {
       final user = game.players[uid];
       if (user != null) {
         try {
-          final position = await client.sortPlayer(
-              game.id.toString(), id.toString(), user.id.toString(), 99);
+          final position = await client.sortPlayer(game.id.toString(),
+              triggeredById.toString(), user.id.toString(), 99);
           sorted.add(user);
           if (position != sorted.length - 1) {
-            reportError(id,
+            reportError(triggeredById,
                 'Игрок отсортирован, но оказался на позиции $position вместо ${sorted.length - 1}');
           }
         } catch (error) {
-          reportError(id, error.toString());
+          reportError(triggeredById, error.toString());
           return;
         }
       }

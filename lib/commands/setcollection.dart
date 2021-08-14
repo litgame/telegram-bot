@@ -60,11 +60,6 @@ class SetCollectionCmd extends ComplexGameCommand {
   }
 
   void _resumeGameWithError(Message message, TelegramEx telegram) {
-    final id = message.from?.id;
-    if (id == null) {
-      throw 'message.from.id is null!';
-    }
-
     telegram
         .sendMessage(gameChatId,
             'Не нашлось ни одной колоды карт, а без них сыграть не выйдет..')

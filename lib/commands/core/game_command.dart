@@ -21,6 +21,14 @@ mixin GameCmdMix on Command {
 
   List<LitGameState> get worksAtStates;
 
+  int get triggeredById {
+    final id = message.from?.id;
+    if (id == null) {
+      throw 'message.from.id is null!';
+    }
+    return id;
+  }
+
   LitGame get game {
     final gci = gameChatId;
     if (gci == null) throw 'В этом чате не играется ни одна игра';

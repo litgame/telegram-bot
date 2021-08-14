@@ -21,14 +21,9 @@ class KickMeCmd extends JoinMeCmd {
 
   @override
   void runCheckedState(Message message, TelegramEx telegram) async {
-    final id = message.from?.id;
-    if (id == null) {
-      throw 'message.from.id is null!';
-    }
-
     try {
-      final result =
-          await client.kick(game.id.toString(), id.toString(), id.toString());
+      final result = await client.kick(game.id.toString(),
+          triggeredById.toString(), triggeredById.toString());
       if (result.success) {
         if (result.gameStopped) {
           game.stop();
@@ -38,7 +33,7 @@ class KickMeCmd extends JoinMeCmd {
           return;
         }
 
-        game.players.remove(id);
+        game.players.remove(triggeredById);
         if (game.state == LitGameState.join) {
           sendStatisticsToAdmin(game, telegram, message.chat.id);
         }
@@ -69,7 +64,7 @@ class KickMeCmd extends JoinMeCmd {
       }
     } on ValidationException catch (error) {
       if (error.type == ErrorType.notFound) {
-        reportError(id, 'Вы уже не играете в игру, всё норм');
+        reportError(triggeredById, 'Вы уже не играете в игру, всё норм');
         return;
       } else
         rethrow;

@@ -34,12 +34,8 @@ class GameFlowCmd extends ComplexGameCommand with ImageSender, EndTurn {
 
   void onGameStart(Message message, TelegramEx telegram) async {
     try {
-      final id = message.from?.id;
-      if (id == null) {
-        throw 'message.from.id is null!';
-      }
-      final masterCards =
-          await client.startGameFlow(game.id.toString(), id.toString());
+      final masterCards = await client.startGameFlow(
+          game.id.toString(), triggeredById.toString());
 
       await catchAsyncError(telegram.sendMessage(game.master.id,
           'Ходит ' + game.master.nickname + '(' + game.master.fullName + ')'));
@@ -60,17 +56,13 @@ class GameFlowCmd extends ComplexGameCommand with ImageSender, EndTurn {
   }
 
   void onNextTurn(Message message, TelegramEx telegram) async {
-    final id = message.from?.id;
-    if (id == null) {
-      throw 'message.from.id is null!';
-    }
     try {
-      final playerStringId =
-          await client.gameFlowNextTurn(game.id.toString(), id.toString());
+      final playerStringId = await client.gameFlowNextTurn(
+          game.id.toString(), triggeredById.toString());
       _onNextPlayer(playerStringId);
     } on ValidationException catch (error) {
       if (error.type == ErrorType.access) {
-        if (game.master.id == id || game.admin.id == id) {
+        if (game.master.id == triggeredById || game.admin.id == triggeredById) {
           onSkip(message, telegram);
         }
       } else {
@@ -80,13 +72,9 @@ class GameFlowCmd extends ComplexGameCommand with ImageSender, EndTurn {
   }
 
   void onSkip(Message message, TelegramEx telegram) async {
-    final id = message.from?.id;
-    if (id == null) {
-      throw 'message.from.id is null!';
-    }
     try {
-      final playerStringId =
-          await client.gameFlowSkipTurn(game.id.toString(), id.toString());
+      final playerStringId = await client.gameFlowSkipTurn(
+          game.id.toString(), triggeredById.toString());
       _onNextPlayer(playerStringId);
     } on ValidationException catch (error) {
       reportError(game.id, error.message);
@@ -123,17 +111,12 @@ class GameFlowCmd extends ComplexGameCommand with ImageSender, EndTurn {
   }
 
   void onSelectCard(Message message, TelegramEx telegram) async {
-    final id = message.from?.id;
-    if (id == null) {
-      throw 'message.from.id is null!';
-    }
-
     try {
       var sType = action.replaceAll('select-', '');
       var type = CardType.generic.getTypeByName(sType);
 
       final card = await client.gameFlowSelectCard(
-          game.id.toString(), id.toString(), type);
+          game.id.toString(), triggeredById.toString(), type);
       deleteScheduledMessages(telegram);
 
       await sendImage(game.id, card.imgUrl, card.name, false);

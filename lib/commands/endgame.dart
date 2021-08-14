@@ -26,12 +26,8 @@ class EndGameCmd extends GameCommand {
     checkGameChat(message);
 
     try {
-      final id = message.from?.id;
-      if (id == null) {
-        throw 'message.from.id is null!';
-      }
-      final success =
-          await client.endGame(message.chat.id.toString(), id.toString());
+      final success = await client.endGame(
+          message.chat.id.toString(), triggeredById.toString());
       if (!success) {
         reportError(message.chat.id,
             'Не получилось остановить игру... непонятно, почему.');

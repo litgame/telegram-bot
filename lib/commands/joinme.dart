@@ -22,13 +22,9 @@ class JoinMeCmd extends GameCommand {
   void runCheckedState(Message message, TelegramEx telegram) async {
     var success = false;
     var registered = true;
-    final id = message.from?.id;
-    if (id == null) {
-      throw 'message.from.id is null!';
-    }
     await telegram
         .sendMessage(
-            id,
+            triggeredById,
             'Добро пожаловать в игру! Я буду писать тебе в личку,'
             ' что происходит в общем чате, чтобы тебе туда-сюда не прыгать. '
             'Кроме того, я буду форвардить всё, что ты мне напишешь в общий чат.')
@@ -44,7 +40,7 @@ class JoinMeCmd extends GameCommand {
     if (!registered) return;
 
     try {
-      success = await client.join(game.id.toString(), id.toString());
+      success = await client.join(game.id.toString(), triggeredById.toString());
     } on ValidationException catch (error) {
       switch (error.type) {
         case ErrorType.exists:

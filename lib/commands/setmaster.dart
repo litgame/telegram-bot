@@ -20,22 +20,17 @@ class SetMasterCmd extends GameCommand {
 
   @override
   void runCheckedState(Message message, TelegramEx telegram) async {
-    final id = message.from?.id;
-    if (id == null) {
-      throw 'message.from.id is null!';
-    }
-
     deleteScheduledMessages(telegram);
     final player = game.players[int.parse(arguments?['userId'])];
     if (player == null) {
-      reportError(id, 'Player not found!');
+      reportError(triggeredById, 'Player not found!');
       return;
     }
     try {
       final success = await client.setMaster(
-          game.id.toString(), id.toString(), player.id.toString());
+          game.id.toString(), triggeredById.toString(), player.id.toString());
       if (!success) {
-        reportError(id, 'Can\'t set master');
+        reportError(triggeredById, 'Can\'t set master');
         return;
       }
       player.isGameMaster = true;
@@ -54,7 +49,7 @@ class SetMasterCmd extends GameCommand {
           asyncErrorHandler);
       cmd.run(message, telegram);
     } catch (error) {
-      reportError(id, error.toString());
+      reportError(triggeredById, error.toString());
       return;
     }
   }

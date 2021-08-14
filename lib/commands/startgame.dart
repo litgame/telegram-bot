@@ -53,13 +53,10 @@ class StartGameCmd extends GameCommand {
 
   @override
   void runCheckedState(Message message, TelegramEx telegram) async {
-    final id = message.from?.id;
-    if (id == null) {
-      throw 'message.from.id is null!';
-    }
     checkGameChat(message);
     try {
-      await client.startGame(message.chat.id.toString(), id.toString());
+      await client.startGame(
+          message.chat.id.toString(), triggeredById.toString());
     } on ValidationException catch (error) {
       if (error.type == ErrorType.exists) {
         _resumeOldGame(message, telegram);
@@ -69,7 +66,7 @@ class StartGameCmd extends GameCommand {
       return;
     }
     final game = LitGame.startNew(message.chat.id);
-    game.players[id] = LitUser(message.from!, isAdmin: true);
+    game.players[triggeredById] = LitUser(message.from!, isAdmin: true);
     gameStartMessage(telegram, game);
   }
 }

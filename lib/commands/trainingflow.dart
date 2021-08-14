@@ -40,16 +40,13 @@ class TrainingFlowCmd extends ComplexGameCommand with ImageSender, EndTurn {
   }
 
   void onTrainingStart(Message message, TelegramEx telegram) async {
-    final id = message.from?.id;
-    if (id == null) {
-      throw 'message.from.id is null!';
-    }
     try {
-      await client.startTrainingFlow(game.id.toString(), id.toString(),
+      await client.startTrainingFlow(
+          game.id.toString(), triggeredById.toString(),
           collectionId: arguments?['cid']);
     } on ValidationException catch (error) {
       if (error.type == ErrorType.access) {
-        reportError(id, error.message);
+        reportError(triggeredById, error.message);
         return;
       } else {
         rethrow;
@@ -76,17 +73,13 @@ class TrainingFlowCmd extends ComplexGameCommand with ImageSender, EndTurn {
   }
 
   void onNextTurn(Message message, TelegramEx telegram) async {
-    final id = message.from?.id;
-    if (id == null) {
-      throw 'message.from.id is null!';
-    }
     try {
-      final playerCard =
-          await client.trainingFlowNextTurn(game.id.toString(), id.toString());
+      final playerCard = await client.trainingFlowNextTurn(
+          game.id.toString(), triggeredById.toString());
       _onNextPlayer(playerCard);
     } on ValidationException catch (error) {
       if (error.type == ErrorType.access) {
-        if (game.master.id == id || game.admin.id == id) {
+        if (game.master.id == triggeredById || game.admin.id == triggeredById) {
           onSkip(message, telegram);
         }
       } else {
@@ -96,13 +89,9 @@ class TrainingFlowCmd extends ComplexGameCommand with ImageSender, EndTurn {
   }
 
   void onSkip(Message message, TelegramEx telegram) async {
-    final id = message.from?.id;
-    if (id == null) {
-      throw 'message.from.id is null!';
-    }
     try {
-      final playerCard =
-          await client.trainingFlowSkipTurn(game.id.toString(), id.toString());
+      final playerCard = await client.trainingFlowSkipTurn(
+          game.id.toString(), triggeredById.toString());
       _onNextPlayer(playerCard);
     } on ValidationException catch (error) {
       reportError(game.id, error.message);
