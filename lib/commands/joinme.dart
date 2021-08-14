@@ -2,14 +2,12 @@ import 'package:args/args.dart';
 import 'package:litgame_client/client.dart';
 import 'package:litgame_telegram_bot/models/game.dart';
 import 'package:litgame_telegram_bot/models/user.dart';
-import 'package:meta/meta.dart';
 import 'package:teledart/model.dart';
 import 'package:teledart_app/teledart_app.dart';
 
 import 'core/game_command.dart';
-import 'finishjoin.dart';
 
-class JoinMeCmd extends GameCommand {
+class JoinMeCmd extends GameCommand with JoinKickStatistics {
   JoinMeCmd();
 
   @override
@@ -74,40 +72,6 @@ class JoinMeCmd extends GameCommand {
       }
       catchAsyncError(telegram.sendMessage(message.chat.id, text));
     });
-  }
-
-  @protected
-  void sendStatisticsToAdmin(
-      LitGame game, TelegramEx telegram, int gameChatId) {
-    try {
-      var text = '*В игре примут участие:*\r\n';
-      var markup;
-      if (game.players.isEmpty) {
-        text = '*что-то все расхотели играть*';
-        markup = ReplyMarkup();
-      } else {
-        for (var user in game.players.values) {
-          text += ' - ' + user.nickname + ' (' + user.fullName + ')\r\n';
-        }
-        markup = InlineKeyboardMarkup(inline_keyboard: [
-          [
-            InlineKeyboardButton(
-                text: 'Завершить набор игроков',
-                callback_data: FinishJoinCmd()
-                    .buildCommandCall({'gci': gameChatId.toString()}))
-          ]
-        ]);
-
-        catchAsyncError(telegram
-            .sendMessage(game.admin.id, text.escapeMarkdownV2(),
-                parse_mode: 'MarkdownV2', reply_markup: markup)
-            .then((message) {
-          scheduleMessageDelete(message.chat.id, message.message_id);
-        }));
-      }
-    } catch (error) {
-      reportError(gameChatId, error.toString());
-    }
   }
 
   @override

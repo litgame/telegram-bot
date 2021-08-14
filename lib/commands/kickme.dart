@@ -1,12 +1,11 @@
 import 'package:args/args.dart';
 import 'package:litgame_client/client.dart';
+import 'package:litgame_telegram_bot/commands/core/game_command.dart';
 import 'package:litgame_telegram_bot/models/game.dart';
 import 'package:teledart/model.dart';
 import 'package:teledart_app/teledart_app.dart';
 
-import 'joinme.dart';
-
-class KickMeCmd extends JoinMeCmd {
+class KickMeCmd extends GameCommand with JoinKickStatistics {
   KickMeCmd();
 
   @override
