@@ -9,8 +9,7 @@ import '../botapp.dart';
 import 'game_command.dart';
 import 'gameflow.dart';
 
-class TrainingFlowCmd extends ComplexGameCommand
-    with ImageSender, EndTurn, CopyChat {
+class TrainingFlowCmd extends ComplexGameCommand with ImageSender, EndTurn {
   TrainingFlowCmd();
 
   @override
@@ -65,27 +64,16 @@ class TrainingFlowCmd extends ComplexGameCommand
         'Это позволит немного разогреть мозги, вспомнить забытые факты и "прокачать"'
         'менее подготовленных к игре товарищей.\r\n';
     catchAsyncError(telegram.sendMessage(game.id, litMsg));
-    final msgToAdminIsCopied = copyChat((chatId, completer) {
-      final future = catchAsyncError(telegram.sendMessage(chatId, litMsg));
-      if (chatId == game.master.id) {
-        future.then((value) {
-          completer.complete();
-        });
-      }
-    });
-
-    msgToAdminIsCopied.then((value) {
-      catchAsyncError(telegram.sendMessage(
-          game.master.id, 'Когда решишь, что разминки хватит - жми сюда!',
-          reply_markup: InlineKeyboardMarkup(inline_keyboard: [
-            [
-              InlineKeyboardButton(
-                  text: 'Завершить разминку', callback_data: buildAction('end'))
-            ]
-          ])));
-      firstStep = true;
-      onNextTurn(message, telegram);
-    });
+    catchAsyncError(telegram.sendMessage(
+        game.master.id, 'Когда решишь, что разминки хватит - жми сюда!',
+        reply_markup: InlineKeyboardMarkup(inline_keyboard: [
+          [
+            InlineKeyboardButton(
+                text: 'Завершить разминку', callback_data: buildAction('end'))
+          ]
+        ])));
+    firstStep = true;
+    onNextTurn(message, telegram);
   }
 
   void onNextTurn(Message message, TelegramEx telegram) async {
@@ -98,17 +86,14 @@ class TrainingFlowCmd extends ComplexGameCommand
           await client.trainingFlowNextTurn(game.id.toString(), id.toString());
       _onNextPlayer(playerCard);
     } on ValidationException catch (error) {
-      if (error.type == ErrorType.state) {
-        reportError(game.id, error.message);
-        return;
-      } else if (error.type == ErrorType.validation) {
-        reportError(game.id, error.message);
-        return;
-      } else if (error.type == ErrorType.notFound) {
-        reportError(game.id, error.message);
-        return;
+      if (error.type == ErrorType.access) {
+        if (game.master.id == id || game.admin.id == id) {
+          onSkip(message, telegram);
+        } else {
+          reportError(game.id, error.message);
+        }
       } else {
-        rethrow;
+        reportError(game.id, error.message);
       }
     }
   }
@@ -123,18 +108,8 @@ class TrainingFlowCmd extends ComplexGameCommand
           await client.trainingFlowSkipTurn(game.id.toString(), id.toString());
       _onNextPlayer(playerCard);
     } on ValidationException catch (error) {
-      if (error.type == ErrorType.state) {
-        reportError(game.id, error.message);
-        return;
-      } else if (error.type == ErrorType.validation) {
-        reportError(game.id, error.message);
-        return;
-      } else if (error.type == ErrorType.notFound) {
-        reportError(game.id, error.message);
-        return;
-      } else {
-        rethrow;
-      }
+      reportError(game.id, error.message);
+      return;
     }
   }
 
@@ -156,14 +131,8 @@ class TrainingFlowCmd extends ComplexGameCommand
         player.fullName +
         ')';
 
-    sendImage(game.id, card.imgUrl, cardMsg, false);
-    copyChat((chatId, _) {
-      if (player.id == chatId) return;
-      sendImage(chatId, card.imgUrl, cardMsg, false);
-    });
-
-    sendImage(player.id, card.imgUrl, card.name, false).then((value) {
-      sendEndTurn(player.id);
+    sendImage(game.id, card.imgUrl, cardMsg, false).then((value) {
+      sendEndTurn(game.id);
     });
   }
 
@@ -172,9 +141,6 @@ class TrainingFlowCmd extends ComplexGameCommand
         'Сейчас таки начнём играть :-)';
     final endMessageSent =
         catchAsyncError(telegram.sendMessage(game.id, litMsg));
-    copyChat((chatId, _) {
-      catchAsyncError(telegram.sendMessage(chatId, litMsg));
-    });
 
     game.state = LitGameState.game;
     final cmd = ComplexCommand.withAction(() => GameFlowCmd(), 'start',
