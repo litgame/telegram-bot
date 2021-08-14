@@ -143,19 +143,6 @@ mixin ImageSender on ComplexCommand {
   }
 }
 
-typedef MessageSender = void Function(int chatId, Completer completer);
-
-mixin CopyChat on GameCmdMix {
-  Future copyChat(MessageSender messageSender) {
-    final completer = Completer();
-    for (var player in game.players.entries) {
-      final litUser = player.value;
-      messageSender(litUser.id, completer);
-    }
-    return completer.future;
-  }
-}
-
 mixin EndTurn on ComplexCommand {
   @protected
   void sendEndTurn(int playerChatId) {

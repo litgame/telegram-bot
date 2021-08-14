@@ -1,5 +1,4 @@
 import 'package:args/args.dart';
-import 'package:litgame_telegram_bot/botapp.dart';
 import 'package:litgame_telegram_bot/commands/gameflow.dart';
 import 'package:litgame_telegram_bot/commands/trainingflow.dart';
 import 'package:litgame_telegram_bot/models/game.dart';
@@ -26,7 +25,7 @@ class SkipCmd extends GameCommand {
 
     if (message.chat.type == 'private') {
       final gameId = await client.findGameOfPlayer(from.id.toString());
-      final game = LitGame.find(int.parse(gameId.replaceFirst(APP_PREFIX, '')));
+      final game = LitGame.find(convertId(gameId));
       if (game == null) {
         _accessError(message.chat.id, telegram);
         return;

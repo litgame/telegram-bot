@@ -5,7 +5,6 @@ import 'package:litgame_telegram_bot/models/game.dart';
 import 'package:teledart/model.dart';
 import 'package:teledart_app/teledart_app.dart';
 
-import '../botapp.dart';
 import 'core/game_command.dart';
 import 'gameflow.dart';
 
@@ -112,8 +111,7 @@ class TrainingFlowCmd extends ComplexGameCommand with ImageSender, EndTurn {
   }
 
   void _onNextPlayer(Map<String, Card> playerCard) {
-    final playerId =
-        int.parse(playerCard.keys.first.replaceFirst(APP_PREFIX, ''));
+    final playerId = convertId(playerCard.keys.first);
     final player = game.players[playerId];
     if (player == null) {
       throw ValidationException(

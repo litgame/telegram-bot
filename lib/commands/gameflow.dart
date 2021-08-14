@@ -5,11 +5,9 @@ import 'package:litgame_telegram_bot/models/game.dart';
 import 'package:teledart/model.dart';
 import 'package:teledart_app/teledart_app.dart';
 
-import '../botapp.dart';
 import 'core/game_command.dart';
 
-class GameFlowCmd extends ComplexGameCommand
-    with ImageSender, EndTurn, CopyChat {
+class GameFlowCmd extends ComplexGameCommand with ImageSender, EndTurn {
   GameFlowCmd();
 
   @override
@@ -96,8 +94,7 @@ class GameFlowCmd extends ComplexGameCommand
   }
 
   void _onNextPlayer(String playerStringId) async {
-    final player =
-        game.players[int.parse(playerStringId.replaceFirst(APP_PREFIX, ''))];
+    final player = game.players[convertId(playerStringId)];
     if (player == null) {
       throw ValidationException(
           'Пользователя нет в списке игроков!', ErrorType.notFound.toString());
