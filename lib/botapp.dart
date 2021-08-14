@@ -19,7 +19,6 @@ import 'commands/setorder.dart';
 import 'commands/startgame.dart';
 import 'commands/trainingflow.dart';
 import 'middleware/logger.dart';
-import 'middleware/message_copy.dart';
 import 'models/user.dart';
 
 const APP_PREFIX = 'telegram-';
@@ -57,7 +56,6 @@ class BotApp extends TeledartApp {
             () => HelpCmd(), 'firstRun', (exception, _, __) => print(exception))
         as Middleware,
     () => Logger(),
-    () => MessageCopy()
   ];
 
   @override
