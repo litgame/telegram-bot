@@ -16,7 +16,13 @@ class EndGameCmd extends GameCommand {
   bool get system => false;
 
   @override
-  void run(Message message, TelegramEx telegram) async {
+  ArgParser? getParser() => null;
+
+  @override
+  List<LitGameState> get worksAtStates => [];
+
+  @override
+  void runCheckedState(Message message, TelegramEx telegram) async {
     checkGameChat(message);
 
     try {
@@ -44,15 +50,6 @@ class EndGameCmd extends GameCommand {
     catchAsyncError(telegram.sendMessage(message.chat.id, 'Всё, наигрались!',
         reply_markup: ReplyKeyboardRemove(remove_keyboard: true)));
   }
-
-  @override
-  ArgParser? getParser() => null;
-
-  @override
-  List<LitGameState> get worksAtStates => [];
-
-  @override
-  void runCheckedState(Message message, TelegramEx telegram) {}
 }
 
 class StopGameCmd extends EndGameCmd {

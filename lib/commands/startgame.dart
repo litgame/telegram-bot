@@ -16,27 +16,6 @@ class StartGameCmd extends GameCommand {
   @override
   bool get system => false;
 
-  @override
-  void run(Message message, TelegramEx telegram) async {
-    final id = message.from?.id;
-    if (id == null) {
-      throw 'message.from.id is null!';
-    }
-    checkGameChat(message);
-    try {
-      await client.startGame(message.chat.id.toString(), id.toString());
-    } on ValidationException catch (error) {
-      if (error.type == ErrorType.exists) {
-        _resumeOldGame(message, telegram);
-      } else {
-        reportError(message.chat.id, error.toString());
-      }
-    }
-    final game = LitGame.startNew(message.chat.id);
-    game.players[id] = LitUser(message.from!, isAdmin: true);
-    gameStartMessage(telegram, game);
-  }
-
   void gameStartMessage(TelegramEx telegram, LitGame game) {
     catchAsyncError(telegram
         .sendMessage(
@@ -73,5 +52,24 @@ class StartGameCmd extends GameCommand {
   List<LitGameState> get worksAtStates => [];
 
   @override
-  void runCheckedState(Message message, TelegramEx telegram) {}
+  void runCheckedState(Message message, TelegramEx telegram) async {
+    final id = message.from?.id;
+    if (id == null) {
+      throw 'message.from.id is null!';
+    }
+    checkGameChat(message);
+    try {
+      await client.startGame(message.chat.id.toString(), id.toString());
+    } on ValidationException catch (error) {
+      if (error.type == ErrorType.exists) {
+        _resumeOldGame(message, telegram);
+      } else {
+        reportError(message.chat.id, error.toString());
+      }
+      return;
+    }
+    final game = LitGame.startNew(message.chat.id);
+    game.players[id] = LitUser(message.from!, isAdmin: true);
+    gameStartMessage(telegram, game);
+  }
 }
