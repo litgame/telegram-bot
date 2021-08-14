@@ -134,11 +134,12 @@ mixin ImageSender on ComplexCommand {
   @protected
   Future sendImage(int chatId, String url, String caption,
       [bool clear = true]) {
-    return telegram.sendPhoto(chatId, url, caption: caption).then((msg) {
+    return catchAsyncError(
+        telegram.sendPhoto(chatId, url, caption: caption).then((msg) {
       if (clear) {
         scheduleMessageDelete(msg.chat.id, msg.message_id);
       }
-    });
+    }));
   }
 }
 
@@ -158,7 +159,7 @@ mixin CopyChat on GameCmdMix {
 mixin EndTurn on ComplexCommand {
   @protected
   void sendEndTurn(int playerChatId) {
-    telegram
+    catchAsyncError(telegram
         .sendMessage(playerChatId, 'Когда закончишь свою историю - жми:',
             reply_markup: InlineKeyboardMarkup(inline_keyboard: [
               [
@@ -169,6 +170,6 @@ mixin EndTurn on ComplexCommand {
             ]))
         .then((msg) {
       scheduleMessageDelete(msg.chat.id, msg.message_id);
-    });
+    }));
   }
 }

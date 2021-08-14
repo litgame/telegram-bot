@@ -89,8 +89,6 @@ class TrainingFlowCmd extends ComplexGameCommand with ImageSender, EndTurn {
       if (error.type == ErrorType.access) {
         if (game.master.id == id || game.admin.id == id) {
           onSkip(message, telegram);
-        } else {
-          reportError(game.id, error.message);
         }
       } else {
         reportError(game.id, error.message);

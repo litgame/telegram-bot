@@ -1,5 +1,3 @@
-import 'dart:async';
-
 import 'package:args/args.dart';
 import 'package:litgame_client/client.dart';
 import 'package:litgame_client/models/card.dart';
@@ -45,79 +43,40 @@ class GameFlowCmd extends ComplexGameCommand
       final masterCards =
           await client.startGameFlow(game.id.toString(), id.toString());
 
-      final toMaster = catchAsyncError(telegram.sendMessage(game.master.id,
+      await catchAsyncError(telegram.sendMessage(game.master.id,
           'Ходит ' + game.master.nickname + '(' + game.master.fullName + ')'));
-      final toChat = catchAsyncError(telegram.sendMessage(game.master.id,
-          'Ходит ' + game.master.nickname + '(' + game.master.fullName + ')'));
-      copyChat((chatId, _) {
-        if (game.master.id == chatId) return;
-        catchAsyncError(telegram.sendMessage(
-            chatId,
-            'Ходит ' +
-                game.master.nickname +
-                '(' +
-                game.master.fullName +
-                ')'));
-      });
 
-      await Future.wait([toMaster, toChat]);
-
-      final cardToAllChats = (Card card) {
-        final toGameChat = sendImage(game.id, card.imgUrl, card.name, false);
-        final toMasterChat =
-            sendImage(game.master.id, card.imgUrl, card.name, false);
-        final toAllUsers = copyChat((chatId, completer) {
-          if (game.master.id == chatId) return;
-          sendImage(chatId, card.imgUrl, card.name, false).then((value) {
-            completer.complete();
-          });
-        });
-
-        return Future.wait([toGameChat, toMasterChat, toAllUsers]);
-      };
       for (var card in masterCards) {
-        await cardToAllChats(card);
+        await sendImage(game.id, card.imgUrl, card.name, false);
       }
-      sendEndTurn(game.master.id);
+
+      if (masterCards.length < 3) {
+        print(
+            'DEBUG: master cards length is ${masterCards.length} instead of 3!!!');
+      }
+      sendEndTurn(game.id);
     } on ValidationException catch (error) {
-      switch (error.type) {
-        case ErrorType.validation:
-          reportError(game.id, error.message);
-          return;
-        case ErrorType.access:
-          reportError(game.id, error.message);
-          return;
-        case ErrorType.state:
-          reportError(game.id, error.message);
-          return;
-        default:
-          rethrow;
-      }
+      reportError(game.id, error.message);
+      return;
     }
   }
 
   void onNextTurn(Message message, TelegramEx telegram) async {
+    final id = message.from?.id;
+    if (id == null) {
+      throw 'message.from.id is null!';
+    }
     try {
-      final id = message.from?.id;
-      if (id == null) {
-        throw 'message.from.id is null!';
-      }
       final playerStringId =
           await client.gameFlowNextTurn(game.id.toString(), id.toString());
       _onNextPlayer(playerStringId);
     } on ValidationException catch (error) {
-      switch (error.type) {
-        case ErrorType.validation:
-          reportError(game.id, error.message);
-          return;
-        case ErrorType.access:
-          reportError(game.id, error.message);
-          return;
-        case ErrorType.state:
-          reportError(game.id, error.message);
-          return;
-        default:
-          rethrow;
+      if (error.type == ErrorType.access) {
+        if (game.master.id == id || game.admin.id == id) {
+          onSkip(message, telegram);
+        }
+      } else {
+        reportError(game.id, error.message);
       }
     }
   }
@@ -132,18 +91,7 @@ class GameFlowCmd extends ComplexGameCommand
           await client.gameFlowSkipTurn(game.id.toString(), id.toString());
       _onNextPlayer(playerStringId);
     } on ValidationException catch (error) {
-      if (error.type == ErrorType.state) {
-        reportError(game.id, error.message);
-        return;
-      } else if (error.type == ErrorType.validation) {
-        reportError(game.id, error.message);
-        return;
-      } else if (error.type == ErrorType.notFound) {
-        reportError(game.id, error.message);
-        return;
-      } else {
-        rethrow;
-      }
+      reportError(game.id, error.message);
     }
   }
 
@@ -155,20 +103,10 @@ class GameFlowCmd extends ComplexGameCommand
           'Пользователя нет в списке игроков!', ErrorType.notFound.toString());
     }
     deleteScheduledMessages(telegram);
-    final toPlayer = catchAsyncError(telegram.sendMessage(
-        player.id, 'Ходит ' + player.nickname + '(' + player.fullName + ')'));
-    final toChat = catchAsyncError(telegram.sendMessage(
+    await catchAsyncError(telegram.sendMessage(
         game.id, 'Ходит ' + player.nickname + '(' + player.fullName + ')'));
 
-    copyChat((chatId, _) {
-      if (player.id == chatId) return;
-      catchAsyncError(telegram.sendMessage(
-          chatId, 'Ходит ' + player.nickname + '(' + player.fullName + ')'));
-    });
-
-    await Future.wait([toPlayer, toChat]);
-
-    telegram
+    catchAsyncError(telegram
         .sendMessage(player.id, 'Тянем карту!',
             reply_markup: InlineKeyboardMarkup(inline_keyboard: [
               [
@@ -184,42 +122,28 @@ class GameFlowCmd extends ComplexGameCommand
             ]))
         .then((msg) {
       scheduleMessageDelete(msg.chat.id, msg.message_id);
-    });
+    }));
   }
 
   void onSelectCard(Message message, TelegramEx telegram) async {
+    final id = message.from?.id;
+    if (id == null) {
+      throw 'message.from.id is null!';
+    }
+
     try {
       var sType = action.replaceAll('select-', '');
       var type = CardType.generic.getTypeByName(sType);
 
-      final id = message.from?.id;
-      if (id == null) {
-        throw 'message.from.id is null!';
-      }
       final card = await client.gameFlowSelectCard(
           game.id.toString(), id.toString(), type);
       deleteScheduledMessages(telegram);
-      sendImage(id, card.imgUrl, card.name, false).then((value) {
-        sendEndTurn(id);
-      });
-      sendImage(game.id, card.imgUrl, card.name, false);
-      copyChat((chatId, _) {
-        if (id == chatId) return;
-        sendImage(chatId, card.imgUrl, card.name, false);
-      });
+
+      await sendImage(game.id, card.imgUrl, card.name, false);
+      sendEndTurn(game.id);
     } on ValidationException catch (error) {
-      switch (error.type) {
-        case ErrorType.validation:
-          reportError(game.id, error.message);
-          return;
-        case ErrorType.access:
-          reportError(game.id, error.message);
-          return;
-        case ErrorType.state:
-          reportError(game.id, error.message);
-          return;
-        default:
-          rethrow;
+      if (error.type != ErrorType.access) {
+        reportError(game.id, error.message);
       }
     }
   }
