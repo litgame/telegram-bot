@@ -56,7 +56,7 @@ class SetOrderCmd extends GameCommand {
             game.master.id.toString(), 0);
         sorted.add(game.master);
 
-        telegram
+        catchAsyncError(telegram
             .sendMessage(
                 message.chat.id,
                 'В каком порядке будут ходить игроки:\r\n' +
@@ -65,7 +65,7 @@ class SetOrderCmd extends GameCommand {
                     InlineKeyboardMarkup(inline_keyboard: getSortButtons()))
             .then((msg) {
           scheduleMessageDelete(msg.chat.id, msg.message_id);
-        });
+        }));
       } catch (error) {
         reportError(triggeredById, error.toString());
       }
@@ -93,7 +93,7 @@ class SetOrderCmd extends GameCommand {
     }
 
     if (sorted.length == game.players.length) {
-      telegram
+      catchAsyncError(telegram
           .sendMessage(message.chat.id,
               'Игроки отсортированы:\r\n' + _getSortedUsersListText(),
               reply_markup: InlineKeyboardMarkup(inline_keyboard: [
@@ -112,9 +112,9 @@ class SetOrderCmd extends GameCommand {
               ]))
           .then((msg) {
         scheduleMessageDelete(msg.chat.id, msg.message_id);
-      });
+      }));
     } else {
-      telegram
+      catchAsyncError(telegram
           .sendMessage(
               message.chat.id,
               'В каком порядке будут ходить игроки:\r\n' +
@@ -123,7 +123,7 @@ class SetOrderCmd extends GameCommand {
                   InlineKeyboardMarkup(inline_keyboard: getSortButtons()))
           .then((msg) {
         scheduleMessageDelete(msg.chat.id, msg.message_id);
-      });
+      }));
     }
   }
 

@@ -62,9 +62,9 @@ class SkipCmd extends GameCommand {
     }
   }
 
-  void _accessError(int chatId, TelegramEx telegram) => telegram.sendMessage(
-      chatId,
-      'Не могу найти игру, в которой ты был бы админом или мастером...');
+  void _accessError(int chatId, TelegramEx telegram) =>
+      catchAsyncError(telegram.sendMessage(chatId,
+          'Не могу найти игру, в которой ты был бы админом или мастером...'));
 
   @override
   ArgParser? getParser() => null;
