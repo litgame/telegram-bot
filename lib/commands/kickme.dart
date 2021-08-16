@@ -15,8 +15,7 @@ class KickMeCmd extends GameCommand with JoinKickStatistics {
   String get name => 'kickme';
 
   @override
-  List<LitGameState> get worksAtStates =>
-      [LitGameState.join, LitGameState.game, LitGameState.training];
+  List<LitGameState> get worksAtStates => [LitGameState.join];
 
   @override
   void runCheckedState(Message message, TelegramEx telegram) async {

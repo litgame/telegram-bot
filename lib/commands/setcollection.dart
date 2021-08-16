@@ -61,15 +61,11 @@ class SetCollectionCmd extends ComplexGameCommand {
 
   void _resumeGameWithError(Message message, TelegramEx telegram) {
     telegram
-        .sendMessage(gameChatId,
+        .sendMessage(game.id,
             'Не нашлось ни одной колоды карт, а без них сыграть не выйдет..')
         .then((value) {
       final cmd = Command.withArgumentsFrom(() => EndGameCmd(), this);
-      if (gameChatId != null) {
-        message.chat.id = gameChatId!;
-        message.from!.id = game.admin.id;
-        cmd.run(message, telegram);
-      }
+      cmd.run(message, telegram);
     });
   }
 

@@ -31,14 +31,34 @@ mixin GameCmdMix on Command {
   }
 
   LitGame get game {
-    final gci = gameChatId;
+    final gci = findGameIdByArguments();
     if (gci == null) throw 'В этом чате не играется ни одна игра';
     var game = LitGame.find(gci);
     if (game == null) throw 'В этом чате не играется ни одна игра';
     return game;
   }
 
-  int? get gameChatId => (arguments?['gci'] is String)
+  /// Найдёт игру, даже если команда запущена в личных сообщениях, и всё,
+  /// что у нас есть - это идентификатор пользователя, отправившего сообщение.
+  Future<LitGame?> findGameEveryWhere() async {
+    LitGame? _g;
+    try {
+      _g = game;
+    } catch (_) {
+      if (message.chat.type == 'private') {
+        final from = message.from;
+        if (from == null) {
+          return null;
+        }
+        final gameId = await client.findGameOfPlayer(from.id.toString());
+        _g = LitGame.find(convertId(gameId));
+      }
+    }
+    return _g;
+  }
+
+  @protected
+  int? findGameIdByArguments() => (arguments?['gci'] is String)
       ? int.parse(arguments?['gci'])
       : arguments?['gci'];
 
@@ -65,10 +85,6 @@ mixin GameCmdMix on Command {
     }
   }
 
-  void runCheckedState(Message message, TelegramEx telegram);
-}
-
-mixin LitGameClient on Command {
   GameClient get client {
     if (BotApp.client == null) throw "Client not configured!";
     return BotApp.client as GameClient;
@@ -78,10 +94,12 @@ mixin LitGameClient on Command {
     final strId = idFromClient.replaceFirst(APP_PREFIX, '');
     return int.parse(strId);
   }
+
+  void runCheckedState(Message message, TelegramEx telegram);
 }
 
 abstract class GameCommand extends Command
-    with GameCmdMix, LitGameClient
+    with GameCmdMix
     implements GameCmdMix {
   late Message message;
   late TelegramEx telegram;
@@ -91,7 +109,7 @@ abstract class GameCommand extends Command
     this.message = message;
     this.telegram = telegram;
     try {
-      if (gameChatId == null) {
+      if (findGameIdByArguments() == null) {
         arguments = getGameBaseParser()
             .parse(['cmd', '--gci', message.chat.id.toString()]);
       }
@@ -107,12 +125,12 @@ abstract class GameCommand extends Command
 }
 
 abstract class ComplexGameCommand extends ComplexCommand
-    with GameCmdMix, LitGameClient
+    with GameCmdMix
     implements GameCmdMix {
   @override
   void run(Message message, TelegramEx telegram, {bool stateCheck: true}) {
     try {
-      if (gameChatId == null) {
+      if (findGameIdByArguments() == null) {
         arguments = getGameBaseParser()
             .parse(['cmd', '--gci', message.chat.id.toString()]);
       }
@@ -133,7 +151,7 @@ abstract class ComplexGameCommand extends ComplexCommand
   String buildAction(String actionName, [Map<String, String>? parameters]) {
     parameters ??= {};
     if (parameters['gci'] == null) {
-      parameters['gci'] = gameChatId.toString();
+      parameters['gci'] = game.id.toString();
     }
     return super.buildAction(actionName, parameters);
   }

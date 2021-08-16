@@ -34,7 +34,7 @@ class SetMasterCmd extends GameCommand {
         return;
       }
       player.isGameMaster = true;
-      catchAsyncError(telegram.sendMessage(gameChatId,
+      catchAsyncError(telegram.sendMessage(game.id,
           player.nickname + '(' + player.fullName + ') будет игромастером!'));
 
       game.state = LitGameState.sorting;
@@ -42,7 +42,7 @@ class SetMasterCmd extends GameCommand {
       final cmd = Command.withArguments(
           () => SetOrderCmd(),
           {
-            'gci': gameChatId.toString(),
+            'gci': game.id.toString(),
             'userId': arguments?['userId'],
             'reset': ''
           },

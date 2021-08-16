@@ -50,7 +50,7 @@ class FinishJoinCmd extends GameCommand {
         InlineKeyboardButton(
             text: text,
             callback_data: SetMasterCmd().buildCommandCall({
-              'gci': gameChatId.toString(),
+              'gci': game.id.toString(),
               'userId': player.telegramUser.id.toString()
             }))
       ]);

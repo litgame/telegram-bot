@@ -43,7 +43,7 @@ class SetOrderCmd extends GameCommand {
     if (arguments?['finish'] != null) {
       game.state = LitGameState.selectCollection;
       final cmd = ComplexCommand.withAction(() => SetCollectionCmd(), 'list',
-          asyncErrorHandler, {'gci': gameChatId.toString()});
+          asyncErrorHandler, {'gci': game.id.toString()});
       cmd.run(message, telegram);
       return;
     }
@@ -103,11 +103,11 @@ class SetOrderCmd extends GameCommand {
 
                       // callback_data: GameFlowCmd.args(arguments).buildAction('start')),
                       callback_data: buildCommandCall(
-                          {'gci': gameChatId.toString(), 'finish': ''})),
+                          {'gci': game.id.toString(), 'finish': ''})),
                   InlineKeyboardButton(
                       text: 'Отсортировать заново',
                       callback_data: buildCommandCall(
-                          {'gci': gameChatId.toString(), 'reset': ''}))
+                          {'gci': game.id.toString(), 'reset': ''}))
                 ]
               ]))
           .then((msg) {
