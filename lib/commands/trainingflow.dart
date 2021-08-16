@@ -76,10 +76,12 @@ class TrainingFlowCmd extends ComplexGameCommand with ImageSender, EndTurn {
     try {
       final playerCard = await client.trainingFlowNextTurn(
           game.id.toString(), triggeredById.toString());
+      deleteScheduledMessages(telegram);
       _onNextPlayer(playerCard);
     } on ValidationException catch (error) {
       if (error.type == ErrorType.access) {
         if (game.master.id == triggeredById || game.admin.id == triggeredById) {
+          deleteScheduledMessages(telegram);
           onSkip(message, telegram);
         }
       } else {

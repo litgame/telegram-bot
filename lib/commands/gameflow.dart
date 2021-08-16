@@ -59,10 +59,12 @@ class GameFlowCmd extends ComplexGameCommand with ImageSender, EndTurn {
     try {
       final playerStringId = await client.gameFlowNextTurn(
           game.id.toString(), triggeredById.toString());
+      deleteScheduledMessages(telegram);
       _onNextPlayer(playerStringId);
     } on ValidationException catch (error) {
       if (error.type == ErrorType.access) {
         if (game.master.id == triggeredById || game.admin.id == triggeredById) {
+          deleteScheduledMessages(telegram);
           onSkip(message, telegram);
         }
       } else {
@@ -87,12 +89,11 @@ class GameFlowCmd extends ComplexGameCommand with ImageSender, EndTurn {
       throw ValidationException(
           'Пользователя нет в списке игроков!', ErrorType.notFound.toString());
     }
-    deleteScheduledMessages(telegram);
     await catchAsyncError(telegram.sendMessage(
         game.id, 'Ходит ' + player.nickname + '(' + player.fullName + ')'));
 
     catchAsyncError(telegram
-        .sendMessage(player.id, 'Тянем карту!',
+        .sendMessage(game.id, 'Тянем карту!',
             reply_markup: InlineKeyboardMarkup(inline_keyboard: [
               [
                 InlineKeyboardButton(
