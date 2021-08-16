@@ -45,6 +45,8 @@ class SkipCmd extends GameCommand {
       return;
     }
 
+    catchAsyncError(telegram.sendMessage(game.id, 'Пропуск хода...'));
+
     if (game.state == LitGameState.game) {
       final cmd = ComplexCommand.withAction(
           () => GameFlowCmd(), 'skip', this.asyncErrorHandler, {
