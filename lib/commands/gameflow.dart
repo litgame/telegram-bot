@@ -37,7 +37,7 @@ class GameFlowCmd extends ComplexGameCommand with ImageSender, EndTurn {
       final masterCards = await client.startGameFlow(
           game.id.toString(), triggeredById.toString());
 
-      await catchAsyncError(telegram.sendMessage(game.master.id,
+      await catchAsyncError(telegram.sendMessage(game.id,
           'Ходит ' + game.master.nickname + '(' + game.master.fullName + ')'));
 
       for (var card in masterCards) {
