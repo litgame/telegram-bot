@@ -1,25 +1,31 @@
+import 'package:litgame_telegram_bot/models/game.dart';
+
 class KickRequest {
-  factory KickRequest.createOrGet(int gameId, int triggeredById, int targetUserId) {
-    final existing = _activeRequests[triggeredById];
+  factory KickRequest.create(
+      int triggeredById, int gameId, LitGameState lastGameState) {
+    final existing = find(triggeredById);
     if (existing != null) {
       return existing;
     }
-    final newRequest = KickRequest._(gameId, triggeredById, targetUserId);
+    final newRequest = KickRequest._(gameId, triggeredById, lastGameState);
+
     _activeRequests[triggeredById] = newRequest;
     return newRequest;
   }
 
-  KickRequest._(this.gameId, this.triggeredById, this.targetUserId);
+  static KickRequest? find(int triggeredById) => _activeRequests[triggeredById];
 
-  KickRequest(this.gameId, this.triggeredById, this.targetUserId) {}
+  KickRequest._(this.gameId, this.triggeredById, this.lastGameState);
 
   static final Map<int, KickRequest> _activeRequests = {};
 
   int gameId;
   int triggeredById;
-  int targetUserId;
+  int? targetUserId;
   int? newMasterId;
   int? newAdminId;
+
+  LitGameState lastGameState;
 
   void delete() {
     _activeRequests.remove(triggeredById);
