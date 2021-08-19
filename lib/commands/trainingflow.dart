@@ -108,6 +108,7 @@ class TrainingFlowCmd extends ComplexGameCommand with ImageSender, EndTurn {
       throw ValidationException(
           'Пользователя нет в списке игроков!', ErrorType.notFound.toString());
     }
+    game.currentPlayerId = playerId;
 
     final card = playerCard.values.first;
     final cardMsg = card.name +
@@ -130,6 +131,7 @@ class TrainingFlowCmd extends ComplexGameCommand with ImageSender, EndTurn {
         catchAsyncError(telegram.sendMessage(game.id, litMsg));
 
     game.state = LitGameState.game;
+    game.currentPlayerId = 0;
     final cmd = ComplexCommand.withAction(() => GameFlowCmd(), 'start',
         asyncErrorHandler, {'gci': game.id.toString()});
     endMessageSent.then((value) {

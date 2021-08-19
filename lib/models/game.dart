@@ -14,6 +14,7 @@ enum LitGameState {
 class LitGame {
   static final Map<int, LitGame> _activeGames = {};
   final int id;
+  int currentPlayerId = 0;
   final Map<int, LitUser> players = {};
   LitGameState state = LitGameState.join;
 

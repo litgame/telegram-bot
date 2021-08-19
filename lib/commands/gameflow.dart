@@ -37,6 +37,8 @@ class GameFlowCmd extends ComplexGameCommand with ImageSender, EndTurn {
       final masterCards = await client.startGameFlow(
           game.id.toString(), triggeredById.toString());
 
+      game.currentPlayerId = game.master.id;
+
       await catchAsyncError(telegram.sendMessage(game.id,
           'Ходит ' + game.master.nickname + '(' + game.master.fullName + ')'));
 
@@ -85,6 +87,7 @@ class GameFlowCmd extends ComplexGameCommand with ImageSender, EndTurn {
       throw ValidationException(
           'Пользователя нет в списке игроков!', ErrorType.notFound.toString());
     }
+    game.currentPlayerId = player.id;
     await catchAsyncError(telegram.sendMessage(
         game.id, 'Ходит ' + player.nickname + '(' + player.fullName + ')'));
 
