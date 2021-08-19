@@ -44,10 +44,6 @@ class GameFlowCmd extends ComplexGameCommand with ImageSender, EndTurn {
         await sendImage(game.id, card.imgUrl, card.name, false);
       }
 
-      if (masterCards.length < 3) {
-        print(
-            'DEBUG: master cards length is ${masterCards.length} instead of 3!!!');
-      }
       sendEndTurn(game.id);
     } on ValidationException catch (error) {
       reportError(game.id, error.message);
