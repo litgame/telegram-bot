@@ -2,7 +2,9 @@ import 'dart:io';
 
 import 'package:args/args.dart';
 import 'package:litgame_client/client.dart';
+import 'package:litgame_telegram_bot/commands/kick.dart';
 import 'package:litgame_telegram_bot/commands/skip.dart';
+import 'package:litgame_telegram_bot/commands/test.dart';
 import 'package:parse_server_sdk/parse_server_sdk.dart';
 import 'package:teledart/model.dart';
 import 'package:teledart_app/teledart_app.dart';
@@ -38,6 +40,7 @@ class BotApp extends TeledartApp {
     () => StopGameCmd(),
     () => JoinMeCmd(),
     () => KickMeCmd(),
+    () => KickCmd(),
     () => FinishJoinCmd(),
     () => SetMasterCmd(),
     () => SetOrderCmd(),
@@ -45,6 +48,7 @@ class BotApp extends TeledartApp {
     () => TrainingFlowCmd(),
     () => GameFlowCmd(),
     () => SkipCmd(),
+    () => TestCmd(),
     // () => AddCollectionCmd(),
     // () => DelCollectionCmd(),
     () => HelpCmd(),

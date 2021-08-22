@@ -53,7 +53,12 @@ class StartGameCmd extends GameCommand {
 
   @override
   void runCheckedState(Message message, TelegramEx telegram) async {
-    checkGameChat(message);
+    if (message.chat.id > 0) {
+      catchAsyncError(telegram.sendMessage(message.chat.id,
+          'Эту команду надо не в личке запускать, а в чате с игроками!'));
+      return;
+    }
+
     try {
       await client.startGame(
           message.chat.id.toString(), triggeredById.toString());

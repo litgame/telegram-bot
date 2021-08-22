@@ -58,7 +58,7 @@ class SetOrderCmd extends GameCommand {
 
         catchAsyncError(telegram
             .sendMessage(
-                message.chat.id,
+                triggeredById,
                 'В каком порядке будут ходить игроки:\r\n' +
                     _getSortedUsersListText(),
                 reply_markup:
@@ -94,7 +94,7 @@ class SetOrderCmd extends GameCommand {
 
     if (sorted.length == game.players.length) {
       catchAsyncError(telegram
-          .sendMessage(message.chat.id,
+          .sendMessage(triggeredById,
               'Игроки отсортированы:\r\n' + _getSortedUsersListText(),
               reply_markup: InlineKeyboardMarkup(inline_keyboard: [
                 [
@@ -116,7 +116,7 @@ class SetOrderCmd extends GameCommand {
     } else {
       catchAsyncError(telegram
           .sendMessage(
-              message.chat.id,
+              triggeredById,
               'В каком порядке будут ходить игроки:\r\n' +
                   _getSortedUsersListText(),
               reply_markup:

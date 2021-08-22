@@ -7,6 +7,9 @@ import 'package:teledart/src/telegram/model.dart';
 import 'package:teledart_app/src/application/application.dart';
 import 'package:teledart_app/src/complex_command.dart';
 
+import 'gameflow.dart';
+import 'trainingflow.dart';
+
 class KickCmd extends ComplexGameCommand {
   @override
   Map<String, CmdAction> get actionMap => {
@@ -19,6 +22,7 @@ class KickCmd extends ComplexGameCommand {
   bool get system => false;
 
   ArgParser getParser() => super.getParser()
+    ..addOption('gci')
     ..addOption('uid')
     ..addOption('mode');
 
@@ -33,23 +37,23 @@ class KickCmd extends ComplexGameCommand {
     final game = await findGameEveryWhere();
     if (game == null) return;
 
-    final user = game.players[triggeredById];
-    if (user == null) return;
+    final me = game.players[triggeredById];
+    if (me == null) return;
 
-    KickRequest.create(game.id, user.id, game.state);
+    KickRequest.create(game.id, me.id, game.state);
 
-    if (user.isGameMaster || user.isAdmin) {
+    if (me.isGameMaster || me.isAdmin) {
       game.state = LitGameState.paused;
       catchAsyncError(
           telegram.sendMessage(game.id, 'Минуточку, игра приостановлена'));
-      _printSelectTargetUser(game, user);
+      _printSelectTargetUser(game, me);
     } else {
       final result = await client.kick(game.id.toString(),
           triggeredById.toString(), triggeredById.toString());
       if (result.success) {
         game.players.remove(triggeredById);
         catchAsyncError(
-            telegram.sendMessage(game.id, '${user.fullName} выходит из игры'));
+            telegram.sendMessage(game.id, '${me.fullName} выходит из игры'));
       }
     }
   }
@@ -94,7 +98,7 @@ class KickCmd extends ComplexGameCommand {
     final userId = arguments?['uid'];
     if (userId == null) return;
 
-    final request = KickRequest.find(userId);
+    final request = KickRequest.find(int.parse(userId));
     if (request == null) return;
 
     final game = await findGameEveryWhere();
@@ -239,12 +243,33 @@ class KickCmd extends ComplexGameCommand {
             game.id, '${user.fullName} будет новым игромастером.'));
       }
 
-      game.players.remove(target.id);
-    }
+      catchAsyncError(
+          telegram.sendMessage(game.id, '${target.fullName} покидает игру.'));
+      game.state = kickRequest.lastGameState;
 
-    if (kickResult.gameStopped) {
-      game.stop();
-      catchAsyncError(telegram.sendMessage(game.id, 'Всё, наигрались!'));
+      if (kickResult.gameStopped) {
+        game.stop();
+        catchAsyncError(telegram.sendMessage(game.id, 'Всё, наигрались!'));
+        return;
+      }
+
+      if (game.currentPlayerId == target.id) {
+        if (kickRequest.lastGameState == LitGameState.game) {
+          final cmd = ComplexCommand.withAction(
+              () => GameFlowCmd(), 'skip', this.asyncErrorHandler, {
+            'gci': game.id.toString(),
+          });
+          cmd.runWithErrorHandler(message, telegram);
+        } else if (kickRequest.lastGameState == LitGameState.training) {
+          final cmd = ComplexCommand.withAction(
+              () => TrainingFlowCmd(), 'skip', this.asyncErrorHandler, {
+            'gci': game.id.toString(),
+          });
+          cmd.runWithErrorHandler(message, telegram);
+        }
+      }
+
+      game.players.remove(target.id);
     }
   }
 

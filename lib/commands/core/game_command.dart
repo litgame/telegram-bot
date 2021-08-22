@@ -62,13 +62,6 @@ mixin GameCmdMix on Command {
       ? int.parse(arguments?['gci'])
       : arguments?['gci'];
 
-  @protected
-  void checkGameChat(Message message) {
-    if (message.chat.id > 0) {
-      throw 'Эту команду надо не в личке запускать, а в чате с игроками ;-)';
-    }
-  }
-
   void reportError(int chatId, String errorDescription) {
     catchAsyncError(telegram.sendMessage(chatId, errorDescription));
   }
@@ -95,7 +88,7 @@ mixin GameCmdMix on Command {
     return int.parse(strId);
   }
 
-  void runCheckedState(Message message, TelegramEx telegram);
+  dynamic runCheckedState(Message message, TelegramEx telegram);
 }
 
 abstract class GameCommand extends Command
@@ -116,7 +109,10 @@ abstract class GameCommand extends Command
       if (!checkState()) {
         reportError(message.chat.id, 'Invalid state ${game.state.toString()}');
       } else {
-        runCheckedState(message, telegram);
+        final future = runCheckedState(message, telegram);
+        if (future is Future) {
+          catchAsyncError(future);
+        }
       }
     } catch (error) {
       reportError(message.chat.id, error.toString());
@@ -130,6 +126,8 @@ abstract class ComplexGameCommand extends ComplexCommand
   @override
   void run(Message message, TelegramEx telegram, {bool stateCheck: true}) {
     try {
+      this.message = message;
+      this.telegram = telegram;
       if (findGameIdByArguments() == null) {
         arguments = getGameBaseParser()
             .parse(['cmd', '--gci', message.chat.id.toString()]);

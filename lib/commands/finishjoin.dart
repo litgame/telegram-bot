@@ -18,14 +18,14 @@ class FinishJoinCmd extends GameCommand {
 
   @override
   void runCheckedState(Message message, TelegramEx telegram) async {
-    if (message.chat.id != game.admin.id) {
+    if (triggeredById != game.admin.id) {
       catchAsyncError(
           telegram.sendMessage(message.chat.id, 'Не ты админ текущей игры!'));
       return;
     }
 
     try {
-      await client.finishJoin(game.id.toString(), message.chat.id.toString());
+      await client.finishJoin(game.id.toString(), triggeredById.toString());
     } on ValidationException catch (error) {
       if (error.type == ErrorType.access) {
         reportError(message.chat.id, error.message);

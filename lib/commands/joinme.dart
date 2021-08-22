@@ -8,7 +8,12 @@ import 'package:teledart_app/teledart_app.dart';
 import 'core/game_command.dart';
 
 class JoinMeCmd extends GameCommand with JoinKickStatistics {
-  JoinMeCmd();
+  JoinMeCmd({this.triggeredByAlternative});
+
+  int? triggeredByAlternative;
+
+  @override
+  int get triggeredById => triggeredByAlternative ?? super.triggeredById;
 
   @override
   bool get system => true;
@@ -52,7 +57,16 @@ class JoinMeCmd extends GameCommand with JoinKickStatistics {
       }
     }
 
-    final user = LitUser(message.from!);
+    LitUser user;
+
+    if (message.from?.id != triggeredById) {
+      final member =
+          await telegram.getChatMember(message.chat.id, triggeredById);
+      user = LitUser(member.user);
+    } else {
+      user = LitUser(message.from!);
+    }
+
     if (!success) {
       reportError(game.id, 'Не удалось добавить ${user.nickname} в игру');
       return;
@@ -60,7 +74,7 @@ class JoinMeCmd extends GameCommand with JoinKickStatistics {
 
     game.players[user.id] = user;
     _sendChatIdRequest(message, user, telegram);
-    sendStatisticsToAdmin(game, telegram, message.chat.id);
+    sendStatisticsToAdmin(game, telegram, game.id);
   }
 
   void _sendChatIdRequest(Message message, LitUser user, TelegramEx telegram) {

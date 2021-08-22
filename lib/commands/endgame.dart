@@ -23,11 +23,11 @@ class EndGameCmd extends GameCommand {
 
   @override
   void runCheckedState(Message message, TelegramEx telegram) async {
-    checkGameChat(message);
-
+    final game = await findGameEveryWhere();
+    if (game == null) return;
     try {
-      final success = await client.endGame(
-          message.chat.id.toString(), triggeredById.toString());
+      final success =
+          await client.endGame(game.id.toString(), triggeredById.toString());
       if (!success) {
         reportError(message.chat.id,
             'Не получилось остановить игру... непонятно, почему.');
@@ -41,10 +41,8 @@ class EndGameCmd extends GameCommand {
         rethrow;
     }
 
-    final game = LitGame.find(message.chat.id);
-    game?.stop();
-    catchAsyncError(telegram.sendMessage(message.chat.id, 'Всё, наигрались!',
-        reply_markup: ReplyKeyboardRemove(remove_keyboard: true)));
+    game.stop();
+    catchAsyncError(telegram.sendMessage(game.id, 'Всё, наигрались!'));
   }
 }
 
