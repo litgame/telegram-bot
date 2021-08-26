@@ -2,9 +2,9 @@ import 'dart:io';
 
 import 'package:args/args.dart';
 import 'package:litgame_telegram_bot/commands/core/game_command.dart';
-import 'package:litgame_telegram_bot/commands/endgame.dart';
 import 'package:litgame_telegram_bot/commands/finishjoin.dart';
 import 'package:litgame_telegram_bot/commands/joinme.dart';
+import 'package:litgame_telegram_bot/commands/kick.dart';
 import 'package:litgame_telegram_bot/commands/setcollection.dart';
 import 'package:litgame_telegram_bot/commands/setorder.dart';
 import 'package:litgame_telegram_bot/commands/startgame.dart';
@@ -31,6 +31,7 @@ class TestCmd extends ComplexGameCommand {
   String get name => 'test';
 
   int get testUserId => _getEnvInt('TEST_USER_ID');
+  int get testUserId2 => _getEnvInt('TEST_USER_ID2');
   int get delay => _getEnvInt('TEST_DELAY');
   String get testCollection => _getEnvStr('TEST_COLLECTION_ID');
 
@@ -69,6 +70,13 @@ class TestCmd extends ComplexGameCommand {
         basicArgs,
         asyncErrorHandler);
     await join.runWithErrorHandler(message, telegram);
+
+    final join2 = Command.withArguments(
+        () => JoinMeCmd(triggeredByAlternative: testUserId2),
+        basicArgs,
+        asyncErrorHandler);
+    await join2.runWithErrorHandler(message, telegram);
+
     await Future.delayed(Duration(seconds: delay));
 
     print('!!! /finishjoin');
@@ -113,6 +121,14 @@ class TestCmd extends ComplexGameCommand {
     await setorder.runWithErrorHandler(message, telegram);
     await Future.delayed(Duration(seconds: delay));
 
+    setorder = Command.withArguments(
+        () => SetOrderCmd(),
+        {'gci': message.chat.id.toString(), 'userId': testUserId2.toString()},
+        asyncErrorHandler);
+
+    await setorder.runWithErrorHandler(message, telegram);
+    await Future.delayed(Duration(seconds: delay));
+
     print('!!! /setorder (finish)');
 
     setorder = Command.withArguments(() => SetOrderCmd(),
@@ -130,14 +146,22 @@ class TestCmd extends ComplexGameCommand {
         {'gci': message.chat.id.toString(), 'cid': testCollection});
     await setcollection.runWithErrorHandler(message, telegram);
 
-    await Future.delayed(Duration(seconds: delay));
+    await Future.delayed(Duration(seconds: 4));
+
+    print('!!! /kick');
+
+    var kick = Command.withArguments(() => KickCmd(),
+        {'gci': message.chat.id.toString()}, asyncErrorHandler);
+    await kick.runWithErrorHandler(message, telegram);
+
+    /* await Future.delayed(Duration(minutes: 5));
 
     print('!!! /endgame');
 
     var endgame = Command.withArguments(() => EndGameCmd(),
         {'gci': message.chat.id.toString()}, asyncErrorHandler);
     await endgame.runWithErrorHandler(message, telegram);
-    await Future.delayed(Duration(seconds: delay));
+    await Future.delayed(Duration(seconds: delay));*/
   }
 
   @override

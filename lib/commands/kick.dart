@@ -40,7 +40,7 @@ class KickCmd extends ComplexGameCommand {
     final me = game.players[triggeredById];
     if (me == null) return;
 
-    KickRequest.create(game.id, me.id, game.state);
+    KickRequest.create(me.id, game.id, game.state);
 
     if (me.isGameMaster || me.isAdmin) {
       game.state = LitGameState.paused;
@@ -77,7 +77,7 @@ class KickCmd extends ComplexGameCommand {
         InlineKeyboardButton(
             text: text,
             callback_data:
-                buildAction('sel-user', {'kickId': player.id.toString()}))
+                buildAction('sel-user', {'uid': player.id.toString()}))
       ]);
     });
     keyboard.add([
@@ -111,7 +111,7 @@ class KickCmd extends ComplexGameCommand {
   }
 
   void onSelectUser(Message message, TelegramEx telegram) async {
-    final targetId = arguments?['uid'];
+    final targetId = int.tryParse(arguments?['uid']);
     if (targetId == null) return;
 
     final game = await findGameEveryWhere();
@@ -123,11 +123,13 @@ class KickCmd extends ComplexGameCommand {
     final target = game.players[targetId];
     if (target == null) return;
 
-    if (target.isAdmin) {
-      _printSelectMasterOrAdmin(game, me, admin: true);
-    }
-    if (target.isGameMaster) {
-      _printSelectMasterOrAdmin(game, me, admin: false);
+    final kickRequest = KickRequest.find(triggeredById);
+    if (kickRequest == null) return;
+    kickRequest.targetUserId = target.id;
+    if (target.isAdmin || target.isGameMaster) {
+      _printSelectMasterOrAdmin(game, me, admin: target.isAdmin);
+    } else {
+      _kickByRequest(kickRequest, game);
     }
   }
 
@@ -178,7 +180,7 @@ class KickCmd extends ComplexGameCommand {
   }
 
   void onSelectAdminOrMaster(Message message, TelegramEx telegram) async {
-    final targetId = arguments?['uid'];
+    final targetId = int.tryParse(arguments?['uid']);
     if (targetId == null) return;
 
     final mode = arguments?['mode'];
@@ -193,6 +195,17 @@ class KickCmd extends ComplexGameCommand {
     final target = game.players[targetId];
     if (target == null) return;
 
+    bool fail = false;
+    await telegram
+        .sendMessage(targetId, 'Пссс-т, тебе хотят передать управление игрой!')
+        .onError((error, stackTrace) {
+      fail = true;
+      return telegram.sendMessage(me.id,
+          'Невозможно передать управление игроку ${target.nickname} (${target.fullName}), т.к. он ещё не писал в личку боту ни разу');
+    });
+
+    if (fail) return;
+
     final kickRequest = KickRequest.find(me.id);
     if (kickRequest == null) return;
 
@@ -206,17 +219,43 @@ class KickCmd extends ComplexGameCommand {
           'mode');
     }
 
-    if ((target.isGameMaster && kickRequest.newMasterId == null) ||
-        (target.isAdmin && kickRequest.newAdminId == null)) {
+    final toKick = game.players[kickRequest.targetUserId];
+    if (toKick == null) return;
+
+    final shouldSetMaster =
+        toKick.isGameMaster && kickRequest.newMasterId == null;
+    final shouldSetAdmin = toKick.isAdmin && kickRequest.newAdminId == null;
+    if (shouldSetAdmin || shouldSetMaster) {
       _printSelectMasterOrAdmin(game, me,
           admin: kickRequest.newAdminId == null);
     } else {
-      _kickRequest(kickRequest, game, target);
+      _kickByRequest(kickRequest, game);
     }
   }
 
-  void _kickRequest(
-      KickRequest kickRequest, LitGame game, LitUser target) async {
+  void _kickByRequest(KickRequest kickRequest, LitGame game) async {
+    final target = game.players[kickRequest.targetUserId];
+    if (target == null) {
+      throw 'Target user already removed';
+    }
+
+    if (game.currentPlayerId == target.id) {
+      game.state = kickRequest.lastGameState;
+      if (kickRequest.lastGameState == LitGameState.game) {
+        final cmd = ComplexCommand.withAction(
+            () => GameFlowCmd(), 'skip', this.asyncErrorHandler, {
+          'gci': game.id.toString(),
+        });
+        await cmd.runWithErrorHandler(message, telegram);
+      } else if (kickRequest.lastGameState == LitGameState.training) {
+        final cmd = ComplexCommand.withAction(
+            () => TrainingFlowCmd(), 'skip', this.asyncErrorHandler, {
+          'gci': game.id.toString(),
+        });
+        await cmd.runWithErrorHandler(message, telegram);
+      }
+    }
+
     final kickResult = await client.kick(
         kickRequest.gameId.toString(),
         kickRequest.triggeredById.toString(),
@@ -245,28 +284,11 @@ class KickCmd extends ComplexGameCommand {
 
       catchAsyncError(
           telegram.sendMessage(game.id, '${target.fullName} покидает игру.'));
-      game.state = kickRequest.lastGameState;
 
       if (kickResult.gameStopped) {
         game.stop();
         catchAsyncError(telegram.sendMessage(game.id, 'Всё, наигрались!'));
         return;
-      }
-
-      if (game.currentPlayerId == target.id) {
-        if (kickRequest.lastGameState == LitGameState.game) {
-          final cmd = ComplexCommand.withAction(
-              () => GameFlowCmd(), 'skip', this.asyncErrorHandler, {
-            'gci': game.id.toString(),
-          });
-          cmd.runWithErrorHandler(message, telegram);
-        } else if (kickRequest.lastGameState == LitGameState.training) {
-          final cmd = ComplexCommand.withAction(
-              () => TrainingFlowCmd(), 'skip', this.asyncErrorHandler, {
-            'gci': game.id.toString(),
-          });
-          cmd.runWithErrorHandler(message, telegram);
-        }
       }
 
       game.players.remove(target.id);

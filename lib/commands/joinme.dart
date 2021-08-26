@@ -24,7 +24,7 @@ class JoinMeCmd extends GameCommand with JoinKickStatistics {
   @override
   void runCheckedState(Message message, TelegramEx telegram) async {
     var success = false;
-    var registered = true;
+    /* var registered = true;
     await telegram
         .sendMessage(
             triggeredById,
@@ -40,7 +40,7 @@ class JoinMeCmd extends GameCommand with JoinKickStatistics {
               ' не смог подключиться, потому что не написал мне в личку, а надо =\\ Пусть напишет сначала мне в личку, а потом попробует ещё раз!');
     });
 
-    if (!registered) return;
+    if (!registered) return;*/
 
     try {
       success = await client.join(game.id.toString(), triggeredById.toString());
@@ -79,13 +79,14 @@ class JoinMeCmd extends GameCommand with JoinKickStatistics {
 
   void _sendChatIdRequest(Message message, LitUser user, TelegramEx telegram) {
     var text = user.nickname + ' подключился к игре!\r\n';
-    user.registrationChecked.then((registered) {
+    telegram.sendMessage(message.chat.id, text);
+    /*user.registrationChecked.then((registered) {
       if (!registered) {
         text +=
             'Мы с тобой ещё не общались, напиши мне в личку, чтобы продолжить игру.\r\n';
       }
       catchAsyncError(telegram.sendMessage(message.chat.id, text));
-    });
+    });*/
   }
 
   @override
