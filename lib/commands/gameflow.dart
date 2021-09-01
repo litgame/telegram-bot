@@ -43,10 +43,10 @@ class GameFlowCmd extends ComplexGameCommand with ImageSender, EndTurn {
           'Ходит ' + game.master.nickname + '(' + game.master.fullName + ')'));
 
       for (var card in masterCards) {
-        await sendImage(game.id, card.imgUrl, card.name, false);
+        await sendImage(game.id, card.imgUrl, card.name, game, false);
       }
 
-      sendEndTurn(game.id);
+      sendEndTurn(game);
     } on ValidationException catch (error) {
       reportError(game.id, error.message);
       return;
@@ -57,12 +57,12 @@ class GameFlowCmd extends ComplexGameCommand with ImageSender, EndTurn {
     try {
       final playerStringId = await client.gameFlowNextTurn(
           game.id.toString(), triggeredById.toString());
-      deleteScheduledMessages(telegram);
+      deleteScheduledMessages(telegram, chatId: game.id);
       _onNextPlayer(playerStringId);
     } on ValidationException catch (error) {
       if (error.type == ErrorType.access) {
         if (game.master.id == triggeredById || game.admin.id == triggeredById) {
-          deleteScheduledMessages(telegram);
+          deleteScheduledMessages(telegram, chatId: game.id);
           onSkip(message, telegram);
         }
       } else {
@@ -106,7 +106,8 @@ class GameFlowCmd extends ComplexGameCommand with ImageSender, EndTurn {
               ]
             ]))
         .then((msg) {
-      scheduleMessageDelete(msg.chat.id, msg.message_id);
+      scheduleMessageDelete(msg.chat.id, msg.message_id,
+          tag: 'game-${game.id}');
     }));
   }
 
@@ -117,10 +118,10 @@ class GameFlowCmd extends ComplexGameCommand with ImageSender, EndTurn {
 
       final card = await client.gameFlowSelectCard(
           game.id.toString(), triggeredById.toString(), type);
-      deleteScheduledMessages(telegram);
+      deleteScheduledMessages(telegram, chatId: game.id);
 
-      await sendImage(game.id, card.imgUrl, card.name, false);
-      sendEndTurn(game.id);
+      await sendImage(game.id, card.imgUrl, card.name, game, false);
+      sendEndTurn(game);
     } on ValidationException catch (error) {
       if (error.type != ErrorType.access) {
         reportError(game.id, error.message);

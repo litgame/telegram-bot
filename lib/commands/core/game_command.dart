@@ -157,12 +157,13 @@ abstract class ComplexGameCommand extends ComplexCommand
 
 mixin ImageSender on ComplexCommand {
   @protected
-  Future sendImage(int chatId, String url, String caption,
+  Future sendImage(int chatId, String url, String caption, LitGame game,
       [bool clear = true]) {
     return catchAsyncError(
         telegram.sendPhoto(chatId, url, caption: caption).then((msg) {
       if (clear) {
-        scheduleMessageDelete(msg.chat.id, msg.message_id);
+        scheduleMessageDelete(msg.chat.id, msg.message_id,
+            tag: 'game-${game.id}');
       }
     }));
   }
@@ -170,9 +171,9 @@ mixin ImageSender on ComplexCommand {
 
 mixin EndTurn on ComplexCommand {
   @protected
-  void sendEndTurn(int playerChatId) {
+  void sendEndTurn(LitGame game) {
     catchAsyncError(telegram
-        .sendMessage(playerChatId, 'Когда закончишь свою историю - жми:',
+        .sendMessage(game.id, 'Когда закончишь свою историю - жми:',
             reply_markup: InlineKeyboardMarkup(inline_keyboard: [
               [
                 InlineKeyboardButton(
@@ -181,7 +182,8 @@ mixin EndTurn on ComplexCommand {
               ]
             ]))
         .then((msg) {
-      scheduleMessageDelete(msg.chat.id, msg.message_id);
+      scheduleMessageDelete(msg.chat.id, msg.message_id,
+          tag: 'game-${game.id}');
     }));
   }
 }
@@ -213,7 +215,8 @@ mixin JoinKickStatistics on GameCommand {
             .sendMessage(game.admin.id, text.escapeMarkdownV2(),
                 parse_mode: 'MarkdownV2', reply_markup: markup)
             .then((message) {
-          scheduleMessageDelete(message.chat.id, message.message_id);
+          scheduleMessageDelete(message.chat.id, message.message_id,
+              tag: 'game-${game.id}');
         }));
       }
     } catch (error) {

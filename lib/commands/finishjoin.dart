@@ -35,7 +35,7 @@ class FinishJoinCmd extends GameCommand {
     }
 
     game.state = LitGameState.selectMaster;
-    deleteScheduledMessages(telegram);
+    deleteScheduledMessages(telegram, tags: ['game-${game.id}']);
     final keyboard = <List<InlineKeyboardButton>>[];
     game.players.values.forEach((player) {
       var text = player.nickname + ' (' + player.fullName + ')';
@@ -59,7 +59,8 @@ class FinishJoinCmd extends GameCommand {
         .sendMessage(game.admin.id, 'Выберите мастера игры: ',
             reply_markup: InlineKeyboardMarkup(inline_keyboard: keyboard))
         .then((msg) {
-      scheduleMessageDelete(msg.chat.id, msg.message_id);
+      scheduleMessageDelete(msg.chat.id, msg.message_id,
+          tag: 'game-${game.id}');
     });
   }
 

@@ -38,7 +38,7 @@ class SetOrderCmd extends GameCommand {
       reportError(triggeredById, 'Это можно только админу игры');
       return;
     }
-    deleteScheduledMessages(telegram);
+    deleteScheduledMessages(telegram, tags: ['game-${game.id}']);
 
     if (arguments?['finish'] != null) {
       game.state = LitGameState.selectCollection;
@@ -64,7 +64,8 @@ class SetOrderCmd extends GameCommand {
                 reply_markup:
                     InlineKeyboardMarkup(inline_keyboard: getSortButtons()))
             .then((msg) {
-          scheduleMessageDelete(msg.chat.id, msg.message_id);
+          scheduleMessageDelete(msg.chat.id, msg.message_id,
+              tag: 'game-${game.id}');
         }));
       } catch (error) {
         reportError(triggeredById, error.toString());
@@ -111,7 +112,8 @@ class SetOrderCmd extends GameCommand {
                 ]
               ]))
           .then((msg) {
-        scheduleMessageDelete(msg.chat.id, msg.message_id);
+        scheduleMessageDelete(msg.chat.id, msg.message_id,
+            tag: 'game-${game.id}');
       }));
     } else {
       catchAsyncError(telegram
@@ -122,7 +124,8 @@ class SetOrderCmd extends GameCommand {
               reply_markup:
                   InlineKeyboardMarkup(inline_keyboard: getSortButtons()))
           .then((msg) {
-        scheduleMessageDelete(msg.chat.id, msg.message_id);
+        scheduleMessageDelete(msg.chat.id, msg.message_id,
+            tag: 'game-${game.id}');
       }));
     }
   }

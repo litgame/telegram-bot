@@ -53,10 +53,14 @@ class SetCollectionCmd extends ComplexGameCommand {
       ]);
     }
 
-    catchAsyncError(telegram.sendMessage(
-        game.master.id, 'Выбери коллекцию карт для игры',
-        reply_markup:
-            InlineKeyboardMarkup(inline_keyboard: collectionButtons)));
+    catchAsyncError(telegram
+        .sendMessage(game.master.id, 'Выбери коллекцию карт для игры',
+            reply_markup:
+                InlineKeyboardMarkup(inline_keyboard: collectionButtons))
+        .then((msg) {
+      scheduleMessageDelete(msg.chat.id, msg.message_id,
+          tag: 'game-${game.id}');
+    }));
   }
 
   void _resumeGameWithError(Message message, TelegramEx telegram) {

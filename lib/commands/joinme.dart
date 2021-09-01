@@ -24,24 +24,6 @@ class JoinMeCmd extends GameCommand with JoinKickStatistics {
   @override
   void runCheckedState(Message message, TelegramEx telegram) async {
     var success = false;
-    /* var registered = true;
-    await telegram
-        .sendMessage(
-            triggeredById,
-            'Добро пожаловать в игру! Я буду писать тебе в личку,'
-            ' что происходит в общем чате, чтобы тебе туда-сюда не прыгать. '
-            'Кроме того, я буду форвардить всё, что ты мне напишешь в общий чат.')
-        .onError((error, stackTrace) {
-      registered = false;
-      final failedUser = LitUser(message.from!);
-      return telegram.sendMessage(
-          game.id,
-          failedUser.nickname +
-              ' не смог подключиться, потому что не написал мне в личку, а надо =\\ Пусть напишет сначала мне в личку, а потом попробует ещё раз!');
-    });
-
-    if (!registered) return;*/
-
     try {
       success = await client.join(game.id.toString(), triggeredById.toString());
     } on ValidationException catch (error) {
@@ -73,6 +55,7 @@ class JoinMeCmd extends GameCommand with JoinKickStatistics {
     }
 
     game.players[user.id] = user;
+    deleteScheduledMessages(telegram, tags: ['game-${game.id}']);
     _sendChatIdRequest(message, user, telegram);
     sendStatisticsToAdmin(game, telegram, game.id);
   }
@@ -80,13 +63,6 @@ class JoinMeCmd extends GameCommand with JoinKickStatistics {
   void _sendChatIdRequest(Message message, LitUser user, TelegramEx telegram) {
     var text = user.nickname + ' подключился к игре!\r\n';
     telegram.sendMessage(message.chat.id, text);
-    /*user.registrationChecked.then((registered) {
-      if (!registered) {
-        text +=
-            'Мы с тобой ещё не общались, напиши мне в личку, чтобы продолжить игру.\r\n';
-      }
-      catchAsyncError(telegram.sendMessage(message.chat.id, text));
-    });*/
   }
 
   @override

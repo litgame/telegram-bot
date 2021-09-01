@@ -53,6 +53,8 @@ class TrainingFlowCmd extends ComplexGameCommand with ImageSender, EndTurn {
       }
     }
 
+    deleteScheduledMessages(telegram, tags: ['game-${game.id}']);
+
     const litMsg = 'Небольшая разминка!\r\n'
         'Сейчас каждому из игроков будет выдаваться случайная карта из колоды,'
         'и нужно будет по ней рассказать что-то, что связано с миром/темой, '
@@ -60,14 +62,20 @@ class TrainingFlowCmd extends ComplexGameCommand with ImageSender, EndTurn {
         'Это позволит немного разогреть мозги, вспомнить забытые факты и "прокачать"'
         'менее подготовленных к игре товарищей.\r\n';
     catchAsyncError(telegram.sendMessage(game.id, litMsg));
-    catchAsyncError(telegram.sendMessage(
-        game.master.id, 'Когда решишь, что разминки хватит - жми сюда!',
-        reply_markup: InlineKeyboardMarkup(inline_keyboard: [
-          [
-            InlineKeyboardButton(
-                text: 'Завершить разминку', callback_data: buildAction('end'))
-          ]
-        ])));
+    catchAsyncError(telegram
+        .sendMessage(
+            game.master.id, 'Когда решишь, что разминки хватит - жми сюда!',
+            reply_markup: InlineKeyboardMarkup(inline_keyboard: [
+              [
+                InlineKeyboardButton(
+                    text: 'Завершить разминку',
+                    callback_data: buildAction('end'))
+              ]
+            ]))
+        .then((msg) {
+      scheduleMessageDelete(msg.chat.id, msg.message_id,
+          tag: 'game-${game.id}-training-end');
+    }));
     firstStep = true;
     onNextTurn(message, telegram);
   }
@@ -76,12 +84,12 @@ class TrainingFlowCmd extends ComplexGameCommand with ImageSender, EndTurn {
     try {
       final playerCard = await client.trainingFlowNextTurn(
           game.id.toString(), triggeredById.toString());
-      deleteScheduledMessages(telegram);
+      deleteScheduledMessages(telegram, chatId: game.id);
       _onNextPlayer(playerCard);
     } on ValidationException catch (error) {
       if (error.type == ErrorType.access) {
         if (game.master.id == triggeredById || game.admin.id == triggeredById) {
-          deleteScheduledMessages(telegram);
+          deleteScheduledMessages(telegram, tags: ['game-${game.id}']);
           onSkip(message, telegram);
         }
       } else {
@@ -119,12 +127,13 @@ class TrainingFlowCmd extends ComplexGameCommand with ImageSender, EndTurn {
         player.fullName +
         ')';
 
-    sendImage(game.id, card.imgUrl, cardMsg, false).then((value) {
-      sendEndTurn(game.id);
+    sendImage(game.id, card.imgUrl, cardMsg, game, false).then((value) {
+      sendEndTurn(game);
     });
   }
 
   void onTrainingEnd(Message message, TelegramEx telegram) async {
+    deleteScheduledMessages(telegram, tags: ['game-${game.id}-training-end']);
     const litMsg = 'Разминку закончили, все молодцы!\r\n'
         'Сейчас таки начнём играть :-)';
     final endMessageSent =

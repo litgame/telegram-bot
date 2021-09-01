@@ -20,7 +20,7 @@ class SetMasterCmd extends GameCommand {
 
   @override
   void runCheckedState(Message message, TelegramEx telegram) async {
-    deleteScheduledMessages(telegram);
+    deleteScheduledMessages(telegram, tags: ['game-${game.id}']);
     final player = game.players[int.parse(arguments?['userId'])];
     if (player == null) {
       reportError(triggeredById, 'Player not found!');

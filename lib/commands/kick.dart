@@ -90,7 +90,7 @@ class KickCmd extends ComplexGameCommand {
         .sendMessage(me.id, 'Выбирай, кого кикнуть: ',
             reply_markup: InlineKeyboardMarkup(inline_keyboard: keyboard))
         .then((msg) {
-      scheduleMessageDelete(msg.chat.id, msg.message_id);
+      scheduleMessageDelete(msg.chat.id, msg.message_id, tag: 'kick');
     }));
   }
 
@@ -106,7 +106,8 @@ class KickCmd extends ComplexGameCommand {
 
     game.state = request.lastGameState;
     request.delete();
-    deleteScheduledMessages(telegram);
+    deleteScheduledMessages(telegram,
+        chatId: request.triggeredById, tags: ['kick']);
     catchAsyncError(telegram.sendMessage(game.id, 'Продолжаем игру!'));
   }
 
