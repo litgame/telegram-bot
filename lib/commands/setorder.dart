@@ -153,7 +153,7 @@ class SetOrderCmd extends GameCommand {
     game.players.forEach((key, user) {
       var skip = false;
       sorted.forEach((entry) {
-        if (entry == user) skip = true;
+        if (entry == user && user.isGameMaster) skip = true;
       });
       if (skip) return;
       usersToSelect.add([

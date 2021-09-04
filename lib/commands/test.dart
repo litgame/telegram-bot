@@ -114,15 +114,16 @@ class TestCmd extends ComplexGameCommand {
 
     print('!!! /setorder (sort)');
 
-/*
     setorder = Command.withArguments(
         () => SetOrderCmd(),
-        {'gci': message.chat.id.toString(), 'userId': testUserId.toString()},
+        {
+          'gci': message.chat.id.toString(),
+          'userId': message.from!.id.toString()
+        },
         asyncErrorHandler);
 
     await setorder.runWithErrorHandler(message, telegram);
     await Future.delayed(Duration(seconds: delay));
-*/
 
     setorder = Command.withArguments(
         () => SetOrderCmd(),
