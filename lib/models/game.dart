@@ -19,9 +19,6 @@ class LitGame {
   LitGameState state = LitGameState.join;
 
   factory LitGame.startNew(int gameId) {
-    // if (_activeGames[gameId] != null) {
-    //   throw 'Game already exists!';
-    // }
     final game = LitGame._(gameId);
     _activeGames[gameId] = game;
     return game;

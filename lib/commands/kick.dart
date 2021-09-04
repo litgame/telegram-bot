@@ -11,6 +11,20 @@ import 'package:teledart_app/src/complex_command.dart';
 import 'gameflow.dart';
 import 'trainingflow.dart';
 
+/// Кикает юзеров на стадии во время игры:
+///  - Обычный игрок может кикнуть сам себя, тогда не будет задаваться никаких
+///    вопросов.
+///  - Админ может кикнуть кого угодно.
+///  - Если админ кикает мастера, то ему выпадет список всех игроков с
+///    предложением выбрать нового мастера.
+///  - Если админ кикает сам себя. то ему выпадет диалог с предложением выбрать
+///    нового админа
+///  - Если админ ещё и и громастер, то ему последовательно будут показаны два
+///    диалога.
+///  - Ситуация, когда на первом ходу, когда игромастеру показывается три карты,
+///    игромастер выходит или его кикают -не обрабатывается полностью. Будет
+///    просто запущен ход следующего игрока, повторно три стартовые карты новому
+///    мастеру показываться не будут.
 class KickCmd extends ComplexGameCommand {
   @override
   Map<String, CmdAction> get actionMap => {
@@ -38,16 +52,27 @@ class KickCmd extends ComplexGameCommand {
     final game = await findGameEveryWhere();
     if (game == null) return;
 
+    if (game.state == LitGameState.paused) {
+      catchAsyncError(telegram.sendMessage(
+          triggeredById, 'Игра приостановлена, подождите, пока её возобновят'));
+      return;
+    }
+
     final me = game.players[triggeredById];
     if (me == null) return;
 
     KickRequest.create(me.id, game.id, game.state);
 
-    if (me.isGameMaster || me.isAdmin) {
+    if (me.isAdmin) {
       game.state = LitGameState.paused;
       catchAsyncError(
           telegram.sendMessage(game.id, 'Минуточку, игра приостановлена'));
       _printSelectTargetUser(game, me);
+    } else if (me.isGameMaster) {
+      game.state = LitGameState.paused;
+      catchAsyncError(
+          telegram.sendMessage(game.id, 'Минуточку, игра приостановлена'));
+      onSelectUser(message, telegram, targetId: me.id);
     } else {
       final result = await client.kick(game.id.toString(),
           triggeredById.toString(), triggeredById.toString());
@@ -112,8 +137,9 @@ class KickCmd extends ComplexGameCommand {
     catchAsyncError(telegram.sendMessage(game.id, 'Продолжаем игру!'));
   }
 
-  void onSelectUser(Message message, TelegramEx telegram) async {
-    final targetId = int.tryParse(arguments?['uid']);
+  void onSelectUser(Message message, TelegramEx telegram,
+      {int? targetId}) async {
+    targetId ??= int.tryParse(arguments?['uid']);
     if (targetId == null) return;
 
     final game = await findGameEveryWhere();
