@@ -9,6 +9,8 @@ import 'package:meta/meta.dart';
 import 'package:teledart/model.dart';
 import 'package:teledart_app/teledart_app.dart';
 
+import 'exceptions.dart';
+
 mixin GameCmdMix on Command {
   ArgParser getGameBaseParser() {
     var parser = ArgParser();
@@ -30,12 +32,19 @@ mixin GameCmdMix on Command {
     return id;
   }
 
+  LitGame? _foundInPM;
+
   LitGame get game {
     final gci = findGameIdByArguments();
-    if (gci == null) throw 'В этом чате не играется ни одна игра';
-    var game = LitGame.find(gci);
-    if (game == null) throw 'В этом чате не играется ни одна игра';
-    return game;
+    if (gci != null) {
+      var game = LitGame.find(gci);
+      if (game != null) return game;
+    }
+    if (_foundInPM != null) {
+      return _foundInPM!;
+    }
+
+    throw GameNotFoundException('В этом чате не играется ни одна игра');
   }
 
   /// Найдёт игру, даже если команда запущена в личных сообщениях, и всё,
@@ -51,7 +60,11 @@ mixin GameCmdMix on Command {
           return null;
         }
         final gameId = await client.findGameOfPlayer(from.id.toString());
-        _g = LitGame.find(convertId(gameId));
+        try {
+          _g = LitGame.find(convertId(gameId));
+        } catch (_) {
+          return null;
+        }
       }
     }
     return _g;
@@ -98,14 +111,26 @@ abstract class GameCommand extends Command
   late TelegramEx telegram;
 
   @override
-  void run(Message message, TelegramEx telegram) {
+  void run(Message message, TelegramEx telegram) async {
     this.message = message;
     this.telegram = telegram;
+
+    if (findGameIdByArguments() == null) {
+      arguments = getGameBaseParser()
+          .parse(['cmd', '--gci', message.chat.id.toString()]);
+    }
+
     try {
-      if (findGameIdByArguments() == null) {
-        arguments = getGameBaseParser()
-            .parse(['cmd', '--gci', message.chat.id.toString()]);
+      game;
+    } on GameNotFoundException catch (_) {
+      if (message.chat.type == 'private') {
+        _foundInPM = await findGameEveryWhere();
       }
+    } catch (exception) {
+      reportError(message.chat.id, exception.toString());
+    }
+
+    try {
       if (!checkState()) {
         reportError(message.chat.id, 'Invalid state ${game.state.toString()}');
       } else {
@@ -124,14 +149,26 @@ abstract class ComplexGameCommand extends ComplexCommand
     with GameCmdMix
     implements GameCmdMix {
   @override
-  void run(Message message, TelegramEx telegram, {bool stateCheck: true}) {
+  void run(Message message, TelegramEx telegram,
+      {bool stateCheck: true}) async {
+    if (findGameIdByArguments() == null) {
+      arguments = getGameBaseParser()
+          .parse(['cmd', '--gci', message.chat.id.toString()]);
+    }
+
     try {
       this.message = message;
       this.telegram = telegram;
-      if (findGameIdByArguments() == null) {
-        arguments = getGameBaseParser()
-            .parse(['cmd', '--gci', message.chat.id.toString()]);
+      game;
+    } on GameNotFoundException catch (_) {
+      if (message.chat.type == 'private') {
+        _foundInPM = await findGameEveryWhere();
       }
+    } catch (exception) {
+      reportError(message.chat.id, exception.toString());
+    }
+
+    try {
       if (stateCheck && !checkState()) {
         reportError(message.chat.id, 'Invalid state ${game.state.toString()}');
         return;

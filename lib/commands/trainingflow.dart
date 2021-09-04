@@ -62,6 +62,13 @@ class TrainingFlowCmd extends ComplexGameCommand with ImageSender, EndTurn {
         'Это позволит немного разогреть мозги, вспомнить забытые факты и "прокачать"'
         'менее подготовленных к игре товарищей.\r\n';
     catchAsyncError(telegram.sendMessage(game.id, litMsg));
+    printTrainingEndButton();
+    firstStep = true;
+    onNextTurn(message, telegram);
+  }
+
+  void printTrainingEndButton() {
+    print('master: ' + game.master.fullName);
     catchAsyncError(telegram
         .sendMessage(
             game.master.id, 'Когда решишь, что разминки хватит - жми сюда!',
@@ -76,8 +83,6 @@ class TrainingFlowCmd extends ComplexGameCommand with ImageSender, EndTurn {
       scheduleMessageDelete(msg.chat.id, msg.message_id,
           tag: 'game-${game.id}-training-end');
     }));
-    firstStep = true;
-    onNextTurn(message, telegram);
   }
 
   void onNextTurn(Message message, TelegramEx telegram) async {

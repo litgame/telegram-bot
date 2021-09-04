@@ -1,4 +1,5 @@
 import 'package:args/args.dart';
+import 'package:litgame_client/client.dart';
 import 'package:litgame_telegram_bot/commands/core/game_command.dart';
 import 'package:litgame_telegram_bot/models/game.dart';
 import 'package:litgame_telegram_bot/models/kick_request.dart';
@@ -128,6 +129,8 @@ class KickCmd extends ComplexGameCommand {
     if (kickRequest == null) return;
     kickRequest.targetUserId = target.id;
     if (target.isAdmin || target.isGameMaster) {
+      deleteScheduledMessages(telegram,
+          chatId: kickRequest.triggeredById, tags: ['kick']);
       _printSelectMasterOrAdmin(game, me, admin: target.isAdmin);
     } else {
       _kickByRequest(kickRequest, game);
@@ -139,7 +142,7 @@ class KickCmd extends ComplexGameCommand {
     final keyboard = <List<InlineKeyboardButton>>[];
     game.players.values.forEach((player) {
       var text = '';
-      if (player.id == me.id) return;
+      if (player.id == me.id && admin) return;
       text += player.nickname + ' (' + player.fullName + ')';
       if (player.isAdmin) {
         if (admin) return;
@@ -176,7 +179,7 @@ class KickCmd extends ComplexGameCommand {
         .sendMessage(me.id, header,
             reply_markup: InlineKeyboardMarkup(inline_keyboard: keyboard))
         .then((msg) {
-      scheduleMessageDelete(msg.chat.id, msg.message_id);
+      scheduleMessageDelete(msg.chat.id, msg.message_id, tag: 'kick');
     }));
   }
 
@@ -197,13 +200,16 @@ class KickCmd extends ComplexGameCommand {
     if (target == null) return;
 
     bool fail = false;
-    await telegram
-        .sendMessage(targetId, 'Пссс-т, тебе хотят передать управление игрой!')
-        .onError((error, stackTrace) {
-      fail = true;
-      return telegram.sendMessage(me.id,
-          'Невозможно передать управление игроку ${target.nickname} (${target.fullName}), т.к. он ещё не писал в личку боту ни разу');
-    });
+    if (me.id != targetId) {
+      await telegram
+          .sendMessage(
+              targetId, 'Пссс-т, тебе хотят передать управление игрой!')
+          .onError((error, stackTrace) {
+        fail = true;
+        return telegram.sendMessage(me.id,
+            'Невозможно передать управление игроку ${target.nickname} (${target.fullName}), т.к. он ещё не писал в личку боту ни разу');
+      });
+    }
 
     if (fail) return;
 
@@ -230,11 +236,24 @@ class KickCmd extends ComplexGameCommand {
       _printSelectMasterOrAdmin(game, me,
           admin: kickRequest.newAdminId == null);
     } else {
-      _kickByRequest(kickRequest, game);
+      await _kickByRequest(kickRequest, game);
+      if (kickRequest.newMasterId != null) {
+        if (game.state == LitGameState.training) {
+          final cmd = ComplexCommand.withAction(
+              () => TrainingFlowCmd(), '', this.asyncErrorHandler, {
+            'gci': game.id.toString(),
+          }) as TrainingFlowCmd;
+          cmd
+            ..runWithErrorHandler(message, telegram)
+            ..printTrainingEndButton();
+        }
+      }
+      kickRequest.delete();
     }
   }
 
-  void _kickByRequest(KickRequest kickRequest, LitGame game) async {
+  Future<KickResult> _kickByRequest(
+      KickRequest kickRequest, LitGame game) async {
     final target = game.players[kickRequest.targetUserId];
     if (target == null) {
       throw 'Target user already removed';
@@ -289,11 +308,18 @@ class KickCmd extends ComplexGameCommand {
       if (kickResult.gameStopped) {
         game.stop();
         catchAsyncError(telegram.sendMessage(game.id, 'Всё, наигрались!'));
-        return;
+        return kickResult;
       }
 
       game.players.remove(target.id);
+
+      game.state = kickRequest.lastGameState;
+      deleteScheduledMessages(telegram,
+          chatId: kickRequest.triggeredById, tags: ['kick']);
+      catchAsyncError(telegram.sendMessage(game.id, 'Продолжаем игру!'));
     }
+
+    return kickResult;
   }
 
   @override
