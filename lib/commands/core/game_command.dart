@@ -151,11 +151,6 @@ abstract class ComplexGameCommand extends ComplexCommand
   @override
   void run(Message message, TelegramEx telegram,
       {bool stateCheck: true}) async {
-    if (findGameIdByArguments() == null) {
-      arguments = getGameBaseParser()
-          .parse(['cmd', '--gci', message.chat.id.toString()]);
-    }
-
     try {
       this.message = message;
       this.telegram = telegram;

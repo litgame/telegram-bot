@@ -3,8 +3,8 @@ import 'dart:io';
 import 'package:args/args.dart';
 import 'package:litgame_telegram_bot/commands/core/game_command.dart';
 import 'package:litgame_telegram_bot/commands/finishjoin.dart';
+import 'package:litgame_telegram_bot/commands/join.dart';
 import 'package:litgame_telegram_bot/commands/joinme.dart';
-import 'package:litgame_telegram_bot/commands/kick.dart';
 import 'package:litgame_telegram_bot/commands/setcollection.dart';
 import 'package:litgame_telegram_bot/commands/setorder.dart';
 import 'package:litgame_telegram_bot/commands/startgame.dart';
@@ -65,11 +65,11 @@ class TestCmd extends ComplexGameCommand {
 
     print('!!! /joinme');
 
-    final join = Command.withArguments(
+/*    final join = Command.withArguments(
         () => JoinMeCmd(triggeredByAlternative: testUserId),
         basicArgs,
         asyncErrorHandler);
-    await join.runWithErrorHandler(message, telegram);
+    await join.runWithErrorHandler(message, telegram);*/
 
     final join2 = Command.withArguments(
         () => JoinMeCmd(triggeredByAlternative: testUserId2),
@@ -92,8 +92,8 @@ class TestCmd extends ComplexGameCommand {
         () => SetMasterCmd(),
         {
           'gci': message.chat.id.toString(),
-          // 'userId': message.from!.id.toString()
-          'userId': testUserId.toString()
+          'userId': message.from!.id.toString()
+          // 'userId': testUserId.toString()
         },
         asyncErrorHandler);
     await setmaster.runWithErrorHandler(message, telegram);
@@ -114,7 +114,7 @@ class TestCmd extends ComplexGameCommand {
 
     print('!!! /setorder (sort)');
 
-    setorder = Command.withArguments(
+/*    setorder = Command.withArguments(
         () => SetOrderCmd(),
         {
           'gci': message.chat.id.toString(),
@@ -123,7 +123,7 @@ class TestCmd extends ComplexGameCommand {
         asyncErrorHandler);
 
     await setorder.runWithErrorHandler(message, telegram);
-    await Future.delayed(Duration(seconds: delay));
+    await Future.delayed(Duration(seconds: delay));*/
 
     setorder = Command.withArguments(
         () => SetOrderCmd(),
@@ -152,11 +152,20 @@ class TestCmd extends ComplexGameCommand {
 
     await Future.delayed(Duration(seconds: 4));
 
-    print('!!! /kick');
+    print('!!! /join');
+
+    final joinNew = ComplexCommand.withAction(
+        () => JoinCmd(triggeredByAlternative: testUserId),
+        '',
+        asyncErrorHandler,
+        {'gci': message.chat.id.toString()});
+    await joinNew.runWithErrorHandler(message, telegram);
+
+/*    print('!!! /kick');
 
     var kick = Command.withArguments(() => KickCmd(),
         {'gci': message.chat.id.toString()}, asyncErrorHandler);
-    await kick.runWithErrorHandler(message, telegram);
+    await kick.runWithErrorHandler(message, telegram);*/
 
     /* await Future.delayed(Duration(minutes: 5));
 

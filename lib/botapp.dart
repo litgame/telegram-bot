@@ -13,6 +13,7 @@ import 'commands/endgame.dart';
 import 'commands/finishjoin.dart';
 import 'commands/gameflow.dart';
 import 'commands/help.dart';
+import 'commands/join.dart';
 import 'commands/joinme.dart';
 import 'commands/kickme.dart';
 import 'commands/setcollection.dart';
@@ -39,6 +40,7 @@ class BotApp extends TeledartApp {
     () => EndGameCmd(),
     () => StopGameCmd(),
     () => JoinMeCmd(),
+    () => JoinCmd(),
     () => KickMeCmd(),
     () => KickCmd(),
     () => FinishJoinCmd(),
