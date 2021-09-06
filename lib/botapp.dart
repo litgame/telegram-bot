@@ -5,7 +5,6 @@ import 'package:litgame_client/client.dart';
 import 'package:litgame_telegram_bot/commands/kick.dart';
 import 'package:litgame_telegram_bot/commands/skip.dart';
 import 'package:litgame_telegram_bot/commands/test.dart';
-import 'package:parse_server_sdk/parse_server_sdk.dart';
 import 'package:teledart/model.dart';
 import 'package:teledart_app/teledart_app.dart';
 
@@ -85,22 +84,6 @@ class BotApp extends TeledartApp {
     }
     print(trace);
     print('==================');
-  }
-
-  @override
-  void run() async {
-    await Parse().initialize(
-      _conf.dataAppKey!,
-      _conf.dataAppUrl!,
-      masterKey: _conf.parseMasterKey,
-      clientKey: _conf.parseRestKey,
-      debug: true,
-      registeredSubClassMap: <String, ParseObjectConstructor>{
-        'LitUsers': () => LitUser.clone(),
-      },
-    );
-
-    super.run();
   }
 }
 

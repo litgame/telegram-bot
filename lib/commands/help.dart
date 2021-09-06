@@ -1,4 +1,3 @@
-import 'package:litgame_telegram_bot/models/user.dart';
 import 'package:teledart/model.dart';
 import 'package:teledart_app/teledart_app.dart';
 
@@ -157,13 +156,7 @@ class HelpCmd extends ComplexCommand with Middleware {
       if (from == null) {
         return;
       }
-      final user = LitUser(from);
-      user.registrationChecked.then((registered) {
-        if (!registered) {
-          user.save();
-          run(data.message!, telegram);
-        }
-      });
+      run(data.message!, telegram);
     }
   }
 }
