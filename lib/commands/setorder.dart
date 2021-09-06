@@ -52,9 +52,10 @@ class SetOrderCmd extends GameCommand {
       try {
         await client.sortReset(game.id.toString(), triggeredById.toString());
         sorted.clear();
-        await client.sortPlayer(game.id.toString(), game.master.id.toString(),
-            game.master.id.toString(), 0);
+        final newPosition = await client.sortPlayer(game.id.toString(),
+            game.master.id.toString(), game.master.id.toString(), 0);
         sorted.add(game.master);
+        game.master.position = newPosition;
 
         catchAsyncError(telegram
             .sendMessage(
@@ -86,6 +87,7 @@ class SetOrderCmd extends GameCommand {
             reportError(triggeredById,
                 'Игрок отсортирован, но оказался на позиции $position вместо ${sorted.length - 1}');
           }
+          user.position = position;
         } catch (error) {
           reportError(triggeredById, error.toString());
           return;

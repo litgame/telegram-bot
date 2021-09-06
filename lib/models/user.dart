@@ -16,6 +16,7 @@ class LitUser {
   bool isAdmin = false;
   final User telegramUser;
   int id;
+  int position = -1;
 
   String get nickname =>
       '@' + (telegramUser.username ?? (telegramUser.first_name));

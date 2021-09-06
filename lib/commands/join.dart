@@ -20,7 +20,7 @@ class JoinCmd extends ComplexGameCommand {
   ArgParser getParser() => super.getParser()
     ..addOption('gci')
     ..addOption('uid')
-    ..addOption('b_uid');
+    ..addOption('pos');
 
   @override
   String get name => 'join';
@@ -93,17 +93,27 @@ class JoinCmd extends ComplexGameCommand {
     if (wantJoin == null) return;
 
     final keyboard = <List<InlineKeyboardButton>>[];
-    game.players.values.forEach((player) {
+    final sortedPlayers = game.players.values.toList();
+    sortedPlayers.sort((a, b) => Comparable.compare(a.position, b.position));
+    sortedPlayers.forEach((player) {
       var text = '';
       text += player.nickname + ' (' + player.fullName + ')';
 
       keyboard.add([
         InlineKeyboardButton(
             text: text,
-            callback_data: buildAction('join',
-                {'uid': wantJoin.id.toString(), 'b_uid': player.id.toString()}))
+            callback_data: buildAction('join', {
+              'uid': wantJoin.id.toString(),
+              'pos': player.position.toString()
+            }))
       ]);
     });
+    keyboard.add([
+      InlineKeyboardButton(
+          text: 'В конец списка',
+          callback_data: buildAction(
+              'join', {'uid': wantJoin.id.toString(), 'pos': 999.toString()}))
+    ]);
     keyboard.add([
       InlineKeyboardButton(
           text: 'Отмена',
@@ -113,7 +123,7 @@ class JoinCmd extends ComplexGameCommand {
 
     catchAsyncError(telegram
         .sendMessage(game.master.id,
-            'Выбирай, перед каким игроком поставить новенького: ',
+            'Выбирай, ПЕРЕД каким игроком поставить новенького: ',
             reply_markup: InlineKeyboardMarkup(inline_keyboard: keyboard))
         .then((msg) {
       scheduleMessageDelete(msg.chat.id, msg.message_id, tag: 'join');
@@ -127,6 +137,9 @@ class JoinCmd extends ComplexGameCommand {
     final wantJoinId = int.tryParse(arguments?['uid']);
     if (wantJoinId == null) return;
 
+    var position = int.tryParse(arguments?['pos']);
+    position ??= 999;
+
     final wantJoin = await _getChatMember(wantJoinId);
     if (wantJoin == null) return;
 
@@ -138,7 +151,7 @@ class JoinCmd extends ComplexGameCommand {
 
     bool success = await catchAsyncError(client.join(
         game.id.toString(), triggeredById.toString(),
-        targetUserId: wantJoinId.toString(), position: 99));
+        targetUserId: wantJoinId.toString(), position: position));
 
     if (success) {
       game.players[wantJoin.id] = wantJoin;
