@@ -36,6 +36,7 @@ class FinishJoinCmd extends GameCommand {
 
     game.state = LitGameState.selectMaster;
     deleteScheduledMessages(telegram, tags: ['game-${game.id}']);
+    deleteScheduledMessages(telegram, tags: ['game-join-${game.id}']);
     final keyboard = <List<InlineKeyboardButton>>[];
     game.players.values.forEach((player) {
       var text = player.nickname + ' (' + player.fullName + ')';

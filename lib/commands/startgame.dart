@@ -34,7 +34,7 @@ class StartGameCmd extends GameCommand {
             ]))
         .then((msg) {
       scheduleMessageDelete(msg.chat.id, msg.message_id,
-          tag: 'game-${game.id}');
+          tag: 'game-join-${game.id}');
     }));
   }
 
