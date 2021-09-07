@@ -3,7 +3,6 @@ import 'dart:io';
 import 'package:args/args.dart';
 import 'package:litgame_telegram_bot/commands/core/game_command.dart';
 import 'package:litgame_telegram_bot/commands/finishjoin.dart';
-import 'package:litgame_telegram_bot/commands/join.dart';
 import 'package:litgame_telegram_bot/commands/joinme.dart';
 import 'package:litgame_telegram_bot/commands/setcollection.dart';
 import 'package:litgame_telegram_bot/commands/setorder.dart';
@@ -65,11 +64,11 @@ class TestCmd extends ComplexGameCommand {
 
     print('!!! /joinme');
 
-/*    final join = Command.withArguments(
+    final join = Command.withArguments(
         () => JoinMeCmd(triggeredByAlternative: testUserId),
         basicArgs,
         asyncErrorHandler);
-    await join.runWithErrorHandler(message, telegram);*/
+    await join.runWithErrorHandler(message, telegram);
 
     final join2 = Command.withArguments(
         () => JoinMeCmd(triggeredByAlternative: testUserId2),
@@ -114,16 +113,13 @@ class TestCmd extends ComplexGameCommand {
 
     print('!!! /setorder (sort)');
 
-/*    setorder = Command.withArguments(
+    setorder = Command.withArguments(
         () => SetOrderCmd(),
-        {
-          'gci': message.chat.id.toString(),
-          'userId': message.from!.id.toString()
-        },
+        {'gci': message.chat.id.toString(), 'userId': testUserId.toString()},
         asyncErrorHandler);
 
     await setorder.runWithErrorHandler(message, telegram);
-    await Future.delayed(Duration(seconds: delay));*/
+    await Future.delayed(Duration(seconds: delay));
 
     setorder = Command.withArguments(
         () => SetOrderCmd(),
@@ -152,14 +148,14 @@ class TestCmd extends ComplexGameCommand {
 
     await Future.delayed(Duration(seconds: 4));
 
-    print('!!! /join');
+    /*print('!!! /join');
 
     final joinNew = ComplexCommand.withAction(
         () => JoinCmd(triggeredByAlternative: testUserId),
         '',
         asyncErrorHandler,
         {'gci': message.chat.id.toString()});
-    await joinNew.runWithErrorHandler(message, telegram);
+    await joinNew.runWithErrorHandler(message, telegram);*/
 
 /*    print('!!! /kick');
 

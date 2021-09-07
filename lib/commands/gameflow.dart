@@ -19,6 +19,8 @@ class GameFlowCmd extends ComplexGameCommand with ImageSender, EndTurn {
   @override
   bool get system => true;
 
+  bool get lockOnRun => true;
+
   @override
   String get name => 'gf';
 

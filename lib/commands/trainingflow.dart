@@ -34,6 +34,8 @@ class TrainingFlowCmd extends ComplexGameCommand with ImageSender, EndTurn {
   String get name => 'tf';
   bool firstStep = false;
 
+  bool get lockOnRun => true;
+
   @override
   void onNoAction(Message message, TelegramEx telegram) {
     // TODO: implement onNoAction
