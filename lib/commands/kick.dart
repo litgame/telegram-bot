@@ -248,8 +248,7 @@ class KickCmd extends ComplexGameCommand {
       kickRequest.newMasterId = targetId;
     } else {
       throw ArgumentError(
-          'Invalid mode argument: ${mode}. Should be ${modeAdmin} or ${modeMaster}',
-          'mode');
+          'Invalid mode argument: ${mode}. Should be ${modeAdmin} or ${modeMaster}');
     }
 
     final toKick = game.players[kickRequest.targetUserId];

@@ -1,4 +1,4 @@
-FROM dart:beta AS build
+FROM dart:stable AS build
 
 # Resolve app dependencies.
 WORKDIR /app
