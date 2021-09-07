@@ -49,9 +49,6 @@ class KickCmd extends ComplexGameCommand {
 
   @override
   void onNoAction(Message message, TelegramEx telegram) async {
-    final game = await findGameEveryWhere();
-    if (game == null) return;
-
     if (game.state == LitGameState.paused) {
       catchAsyncError(telegram.sendMessage(
           triggeredById, 'Игра приостановлена, подождите, пока её возобновят'));

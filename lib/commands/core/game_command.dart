@@ -32,7 +32,7 @@ mixin GameCmdMix on Command {
     return id;
   }
 
-  LitGame? _foundInPM;
+  LitGame? _foundBySender;
 
   LitGame get game {
     final gci = findGameIdByArguments();
@@ -40,8 +40,8 @@ mixin GameCmdMix on Command {
       var game = LitGame.find(gci);
       if (game != null) return game;
     }
-    if (_foundInPM != null) {
-      return _foundInPM!;
+    if (_foundBySender != null) {
+      return _foundBySender!;
     }
 
     throw GameNotFoundException('В этом чате не играется ни одна игра');
@@ -54,17 +54,15 @@ mixin GameCmdMix on Command {
     try {
       _g = game;
     } catch (_) {
-      if (message.chat.type == 'private') {
-        final from = message.from;
-        if (from == null) {
-          return null;
-        }
-        final gameId = await client.findGameOfPlayer(from.id.toString());
-        try {
-          _g = LitGame.find(convertId(gameId));
-        } catch (_) {
-          return null;
-        }
+      final from = message.from;
+      if (from == null) {
+        return null;
+      }
+      final gameId = await client.findGameOfPlayer(from.id.toString());
+      try {
+        _g = LitGame.find(convertId(gameId));
+      } catch (_) {
+        return null;
       }
     }
     return _g;
@@ -124,7 +122,7 @@ abstract class GameCommand extends Command
       game;
     } on GameNotFoundException catch (_) {
       if (message.chat.type == 'private') {
-        _foundInPM = await findGameEveryWhere();
+        _foundBySender = await findGameEveryWhere();
       }
     } catch (exception) {
       reportError(message.chat.id, exception.toString());
@@ -156,9 +154,7 @@ abstract class ComplexGameCommand extends ComplexCommand
       this.telegram = telegram;
       game;
     } on GameNotFoundException catch (_) {
-      if (message.chat.type == 'private') {
-        _foundInPM = await findGameEveryWhere();
-      }
+      _foundBySender = await findGameEveryWhere();
     } catch (exception) {
       reportError(message.chat.id, exception.toString());
     }
