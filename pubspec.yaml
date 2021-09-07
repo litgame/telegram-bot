@@ -8,7 +8,7 @@ environment:
 
 dependencies:
   meta: ^1.7.0
-  teledart_app: 1.0.1-dev.1
+  teledart_app: ^1.0.1
     #path: ../../teledart_app
   litgame_client:
     git: https://github.com/litgame/rest-client.git

@@ -24,6 +24,8 @@ mixin GameCmdMix on Command {
 
   List<LitGameState> get worksAtStates;
 
+  bool get lockOnRun => true;
+
   int get triggeredById {
     final id = message.from?.id;
     if (id == null) {
