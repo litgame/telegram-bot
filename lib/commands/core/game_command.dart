@@ -58,14 +58,24 @@ mixin GameCmdMix on Command {
       if (from == null) {
         return null;
       }
-      final gameId = await client.findGameOfPlayer(from.id.toString());
+      final gameId = message.chat.id;
       try {
-        _g = LitGame.find(convertId(gameId));
+        _g = LitGame.find(gameId);
+        _g ??= await _findGameOfPlayer(from.id);
       } catch (_) {
-        return null;
+        _g = await _findGameOfPlayer(from.id);
       }
     }
     return _g;
+  }
+
+  Future<LitGame?> _findGameOfPlayer(int userId) async {
+    final gameId = await client.findGameOfPlayer(userId.toString());
+    try {
+      return await LitGame.find(convertId(gameId));
+    } catch (_) {
+      return null;
+    }
   }
 
   @protected
