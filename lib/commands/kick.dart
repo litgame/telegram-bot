@@ -159,8 +159,9 @@ class KickCmd extends ComplexGameCommand {
   }
 
   void _printSelectMasterOrAdmin(LitGame game, LitUser me,
-      {required bool admin}) {
+      {required bool admin}) async {
     deleteScheduledMessages(telegram, chatId: me.id, tags: ['kick']);
+    await Future.delayed(Duration(seconds: 1));
     final keyboard = <List<InlineKeyboardButton>>[];
     game.players.values.forEach((player) {
       var text = '';
@@ -264,9 +265,7 @@ class KickCmd extends ComplexGameCommand {
               () => TrainingFlowCmd(), '', this.asyncErrorHandler, {
             'gci': game.id.toString(),
           }) as TrainingFlowCmd;
-          cmd
-            ..runWithErrorHandler(message, telegram)
-            ..printTrainingEndButton();
+          cmd.printTrainingEndButton(telegram, game);
         }
       }
       kickRequest.delete();

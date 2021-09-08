@@ -64,12 +64,12 @@ class TrainingFlowCmd extends ComplexGameCommand with ImageSender, EndTurn {
         'Это позволит немного разогреть мозги, вспомнить забытые факты и "прокачать"'
         'менее подготовленных к игре товарищей.\r\n';
     catchAsyncError(telegram.sendMessage(game.id, litMsg));
-    printTrainingEndButton();
+    printTrainingEndButton(telegram, game);
     firstStep = true;
     onNextTurn(message, telegram);
   }
 
-  void printTrainingEndButton() {
+  void printTrainingEndButton(TelegramEx telegram, LitGame game) {
     catchAsyncError(telegram
         .sendMessage(
             game.master.id, 'Когда решишь, что разминки хватит - жми сюда!',
