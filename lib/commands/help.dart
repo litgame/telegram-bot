@@ -164,8 +164,12 @@ class HelpCmd extends ComplexCommand with Middleware {
       }
     });
     if (!lookForCommand) return;
-    final startCommand = message.text?.contains('/start');
-    if (startCommand != true) return;
+
+    final text = message.text;
+    if (text == null) return;
+    final startCommand =
+        text.contains('/start') && !text.contains('/startgame');
+    if (!startCommand) return;
 
     final from = message.from;
     if (from == null) return;

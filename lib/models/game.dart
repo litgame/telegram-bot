@@ -17,6 +17,7 @@ class LitGame {
   int currentPlayerId = 0;
   final Map<int, LitUser> players = {};
   LitGameState state = LitGameState.join;
+  bool onePlayerMode = false;
 
   factory LitGame.startNew(int gameId) {
     final game = LitGame._(gameId);

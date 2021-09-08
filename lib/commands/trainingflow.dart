@@ -35,6 +35,7 @@ class TrainingFlowCmd extends ComplexGameCommand with ImageSender, EndTurn {
   bool firstStep = false;
 
   bool get lockOnRun => true;
+  Duration get lockDuration => Duration(seconds: 1);
 
   @override
   void onNoAction(Message message, TelegramEx telegram) {
@@ -90,7 +91,8 @@ class TrainingFlowCmd extends ComplexGameCommand with ImageSender, EndTurn {
     try {
       final playerCard = await client.trainingFlowNextTurn(
           game.id.toString(), triggeredById.toString());
-      deleteScheduledMessages(telegram, chatId: game.id);
+      deleteScheduledMessages(telegram,
+          chatId: game.id, tags: ['game-${game.id}']);
       _onNextPlayer(playerCard);
     } on ValidationException catch (error) {
       if (error.type == ErrorType.access) {

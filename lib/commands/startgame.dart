@@ -6,6 +6,7 @@ import 'package:teledart/model.dart';
 import 'package:teledart_app/teledart_app.dart';
 
 import 'core/game_command.dart';
+import 'setcollection.dart';
 
 class StartGameCmd extends GameCommand {
   StartGameCmd();
@@ -54,25 +55,57 @@ class StartGameCmd extends GameCommand {
 
   @override
   void runCheckedState(Message message, TelegramEx telegram) async {
-    if (message.chat.id > 0) {
-      catchAsyncError(telegram.sendMessage(message.chat.id,
-          'Эту команду надо не в личке запускать, а в чате с игроками!'));
-      return;
-    }
-
-    try {
-      await client.startGame(
-          message.chat.id.toString(), triggeredById.toString());
-    } on ValidationException catch (error) {
-      if (error.type == ErrorType.exists) {
-        _resumeOldGame(message, telegram);
-      } else {
-        reportError(message.chat.id, error.toString());
+    if (message.chat.type == 'private') {
+      _startOnePlayerMode();
+    } else {
+      try {
+        await client.startGame(
+            message.chat.id.toString(), triggeredById.toString());
+      } on ValidationException catch (error) {
+        if (error.type == ErrorType.exists) {
+          _resumeOldGame(message, telegram);
+        } else {
+          reportError(message.chat.id, error.toString());
+        }
+        return;
       }
-      return;
+      final game = LitGame.startNew(message.chat.id);
+      game.players[triggeredById] = LitUser(message.from!, isAdmin: true);
+      gameStartMessage(telegram, game);
     }
-    final game = LitGame.startNew(message.chat.id);
-    game.players[triggeredById] = LitUser(message.from!, isAdmin: true);
-    gameStartMessage(telegram, game);
+  }
+
+  void _startOnePlayerMode() async {
+    catchAsyncError(
+        telegram.sendMessage(message.chat.id, 'Играем с одного устройства!'));
+    try {
+      try {
+        await client.startGame(
+            message.chat.id.toString(), triggeredById.toString());
+      } on ValidationException catch (_) {
+        await client.endGame(
+            message.chat.id.toString(), triggeredById.toString());
+        await client.startGame(
+            message.chat.id.toString(), triggeredById.toString());
+      }
+      final game = LitGame.startNew(message.chat.id);
+      game.onePlayerMode = true;
+      game.players[triggeredById] =
+          LitUser(message.from!, isAdmin: true, isGameMaster: true);
+
+      // await client.join(game.id.toString(), triggeredById.toString());
+      await client.finishJoin(game.id.toString(), triggeredById.toString());
+
+      await client.setMaster(game.id.toString(), triggeredById.toString(),
+          triggeredById.toString());
+      await client.sortPlayer(game.id.toString(), triggeredById.toString(),
+          triggeredById.toString(), 0);
+      game.state = LitGameState.selectCollection;
+      final cmd = ComplexCommand.withAction(() => SetCollectionCmd(), 'list',
+          asyncErrorHandler, {'gci': game.id.toString()});
+      cmd.runWithErrorHandler(message, telegram);
+    } catch (error) {
+      reportError(message.chat.id, error.toString());
+    }
   }
 }
