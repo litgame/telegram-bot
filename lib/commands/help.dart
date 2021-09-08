@@ -151,12 +151,24 @@ class HelpCmd extends ComplexCommand with Middleware {
   ///
   @override
   void handle(Update data, TelegramEx telegram) {
-    if (data.message?.chat.type == 'private') {
-      final from = data.message?.from;
-      if (from == null) {
+    final message = data.message;
+    if (message == null) return;
+
+    if (message.chat.type != 'private') return;
+
+    var lookForCommand = false;
+    message.entities?.forEach((entity) {
+      if (entity.type == 'bot_command') {
+        lookForCommand = true;
         return;
       }
-      run(data.message!, telegram);
-    }
+    });
+    if (!lookForCommand) return;
+    final startCommand = message.text?.contains('/start');
+    if (startCommand != true) return;
+
+    final from = message.from;
+    if (from == null) return;
+    run(message, telegram);
   }
 }
