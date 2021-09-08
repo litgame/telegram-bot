@@ -152,8 +152,6 @@ class KickCmd extends ComplexGameCommand {
     if (kickRequest == null) return;
     kickRequest.targetUserId = target.id;
     if (target.isAdmin || target.isGameMaster) {
-      deleteScheduledMessages(telegram,
-          chatId: kickRequest.triggeredById, tags: ['kick']);
       _printSelectMasterOrAdmin(game, me, admin: target.isAdmin);
     } else {
       _kickByRequest(kickRequest, game);
@@ -162,6 +160,7 @@ class KickCmd extends ComplexGameCommand {
 
   void _printSelectMasterOrAdmin(LitGame game, LitUser me,
       {required bool admin}) {
+    deleteScheduledMessages(telegram, chatId: me.id, tags: ['kick']);
     final keyboard = <List<InlineKeyboardButton>>[];
     game.players.values.forEach((player) {
       var text = '';
@@ -281,6 +280,10 @@ class KickCmd extends ComplexGameCommand {
       throw 'Target user already removed';
     }
 
+    print('BEGIN ==============');
+    print('state actual: ' + game.state.toString());
+    print('state last: ' + kickRequest.lastGameState.toString());
+
     if (game.currentPlayerId == target.id) {
       game.state = kickRequest.lastGameState;
       if (kickRequest.lastGameState == LitGameState.game) {
@@ -340,6 +343,10 @@ class KickCmd extends ComplexGameCommand {
           chatId: kickRequest.triggeredById, tags: ['kick']);
       catchAsyncError(telegram.sendMessage(game.id, 'Продолжаем игру!'));
     }
+
+    print('state actual: ' + game.state.toString());
+    print('state last: ' + kickRequest.lastGameState.toString());
+    print('END ==============\n\n');
 
     return kickResult;
   }
