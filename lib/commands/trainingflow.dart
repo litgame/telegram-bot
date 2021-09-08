@@ -139,6 +139,7 @@ class TrainingFlowCmd extends ComplexGameCommand with ImageSender, EndTurn {
   }
 
   void onTrainingEnd(Message message, TelegramEx telegram) async {
+    if (triggeredById != game.master.id) return;
     deleteScheduledMessages(telegram, tags: ['game-${game.id}-training-end']);
     const litMsg = 'Разминку закончили, все молодцы!\r\n'
         'Сейчас таки начнём играть :-)';
