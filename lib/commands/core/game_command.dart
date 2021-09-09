@@ -210,13 +210,19 @@ mixin ImageSender on ComplexCommand {
 mixin EndTurn on ComplexCommand {
   @protected
   void sendEndTurn(LitGame game) {
+    var message = 'Когда закончишь свою историю - жми:';
+    var button = 'Завершить ход';
+    if (game.onePlayerMode) {
+      message = 'Когда закончишь свой рассказ - передай телефон '
+          'следующему игроку. И кнопку нажми:';
+      button = 'Начать следующий ход';
+    }
     catchAsyncError(telegram
-        .sendMessage(game.id, 'Когда закончишь свою историю - жми:',
+        .sendMessage(game.id, message,
             reply_markup: InlineKeyboardMarkup(inline_keyboard: [
               [
                 InlineKeyboardButton(
-                    text: 'Завершить ход',
-                    callback_data: buildAction('next-turn'))
+                    text: button, callback_data: buildAction('next-turn'))
               ]
             ]))
         .then((msg) {

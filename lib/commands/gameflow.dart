@@ -42,8 +42,14 @@ class GameFlowCmd extends ComplexGameCommand with ImageSender, EndTurn {
 
       game.currentPlayerId = game.master.id;
 
-      await catchAsyncError(telegram.sendMessage(game.id,
-          'Ходит ' + game.master.nickname + '(' + game.master.fullName + ')'));
+      if (!game.onePlayerMode)
+        await catchAsyncError(telegram.sendMessage(
+            game.id,
+            'Ходит ' +
+                game.master.nickname +
+                '(' +
+                game.master.fullName +
+                ')'));
 
       for (var card in masterCards) {
         await sendImage(game.id, card.imgUrl, card.name, game, false);
@@ -91,8 +97,9 @@ class GameFlowCmd extends ComplexGameCommand with ImageSender, EndTurn {
           'Пользователя нет в списке игроков!', ErrorType.notFound.toString());
     }
     game.currentPlayerId = player.id;
-    await catchAsyncError(telegram.sendMessage(
-        game.id, 'Ходит ' + player.nickname + '(' + player.fullName + ')'));
+    if (!game.onePlayerMode)
+      await catchAsyncError(telegram.sendMessage(
+          game.id, 'Ходит ' + player.nickname + '(' + player.fullName + ')'));
 
     catchAsyncError(telegram
         .sendMessage(game.id, 'Тянем карту!',

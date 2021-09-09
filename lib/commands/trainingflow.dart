@@ -127,13 +127,15 @@ class TrainingFlowCmd extends ComplexGameCommand with ImageSender, EndTurn {
     game.currentPlayerId = playerId;
 
     final card = playerCard.values.first;
-    final cardMsg = card.name +
-        '\r\n' +
-        'Ходит ' +
-        player.nickname +
-        '(' +
-        player.fullName +
-        ')';
+    final cardMsg = !game.onePlayerMode
+        ? (card.name +
+            '\r\n' +
+            'Ходит ' +
+            player.nickname +
+            '(' +
+            player.fullName +
+            ')')
+        : '';
 
     sendImage(game.id, card.imgUrl, cardMsg, game, false).then((value) {
       sendEndTurn(game);
